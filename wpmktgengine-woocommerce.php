@@ -190,6 +190,10 @@ register_activation_hook(__FILE__, function(){
                             'name' => 'upsell purchased',
                             'description' => 'Upsell Purchased'
                         ),
+                        array(
+                            'name' => 'order payment declined',
+                            'description' => ''
+                        ),
                     )
                 );
             } catch(\Exception $e){
@@ -818,8 +822,12 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $order_genoo_id = $id;
                 $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
                 $cartOrder->setApi($WPME_API);
-                $cartOrder->actionOrderFullfillment();
                 $order = new \WC_Order($order_id);
+                if(method_exists($order, 'has_status') && $order->has_status('processing')){
+                    $cartOrder->actionNewOrder();
+                } else {
+                    $cartOrder->actionOrderFullfillment();
+                }
                 $cartAddress = $order->get_address('billing');
                 $cartAddress2 = $order->get_address('shipping');
                 $cartOrder->setBillingAddress(
@@ -895,7 +903,6 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $order_genoo_id = $id;
                 $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
                 $cartOrder->setApi($WPME_API);
-                $cartOrder->actionOrderFullfillment();
                 $order = new \WC_Order($order_id);
                 // Status?
                 $cartOrder->financial_status = 'declined';
