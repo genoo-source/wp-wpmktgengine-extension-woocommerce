@@ -5,10 +5,10 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.5.081
+    Version: 1.5.0082
     License: GPLv2
     WC requires at least: 3.0.0
-    WC tested up to: 5.0
+    WC tested up to: 5.2.3
 */
 /*
     Copyright 2015  WPMKTENGINE, LLC  (web : http://www.genoo.com/)
