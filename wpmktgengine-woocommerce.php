@@ -194,6 +194,34 @@ register_activation_hook(__FILE__, function(){
                             'name' => 'order payment declined',
                             'description' => ''
                         ),
+                        array(
+                            'name' => 'completed order',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription started',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription payment',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription payment declined',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription payment cancelled',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription cancelled',
+                            'description' => ''
+                        ),
+                        array(
+                            'name' => 'subscription expired',
+                            'description' => ''
+                        ),
                     )
                 );
             } catch(\Exception $e){
@@ -1339,6 +1367,13 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     @$refund->get_refund_reason(),
                     @$refund->get_refund_amount()
                 );
+                // @@ PART REFUND
+                $cartOrder->order_status = 'Order Refund Paid Partial';
+                $cartOrder->changed->order_status = 'Order Refund Paid Partial';
+                $cartOrder->financial_status = 'paid';
+                $cartOrder->changed->financial_status = 'paid';
+                $cartOrder->action = 'order refund partial';
+                $cartOrder->changed->action = 'order refund partial';
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('UPDATING ORDER PARTIALLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
@@ -1694,8 +1729,65 @@ if(!function_exists('wpme_clear_sess')){
     }
 }
 
-//// Filter action
-//add_filter('genoo_wpme_api_params', function($params, $action){
-//    \Tracy\Debugger::barDump($params);
-//    return $params;
-//}, 10, 2);
+/**
+ * This utility function has been created after some back
+ * and forth feedback and helps to decide what the correct
+ * activity stream type should be for each action, name etc.
+ */
+function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder){
+  $orderStatus = $order->get_status();
+  switch($orderStatus){
+    case 'failed':
+      $cartOrder->order_status = 'Order';
+      $cartOrder->changed->order_status = 'Order';
+      $cartOrder->financial_status = 'declined';
+      $cartOrder->changed->financial_status = 'declined';
+      $cartOrder->action = 'order payment declined';
+      $cartOrder->changed->action = 'order payment declined';
+    break;
+    case 'processing':
+      $cartOrder->order_status = 'New Order';
+      $cartOrder->changed->order_status = 'New Order';
+      $cartOrder->financial_status = 'paid';
+      $cartOrder->changed->financial_status = 'paid';
+      $cartOrder->action = 'new order';
+      $cartOrder->changed->action = 'new order';
+    break;
+    case 'completed':
+      $cartOrder->order_status = 'Completed Order';
+      $cartOrder->changed->order_status = 'Completed Order';
+      $cartOrder->financial_status = 'paid';
+      $cartOrder->changed->financial_status = 'paid';
+      $cartOrder->action = 'completed order';
+      $cartOrder->changed->action = 'completed order';
+    break;
+    // Not specified yet by the spec
+    // case 'pending':
+    //   $cartOrder->order_status = '';
+    //   $cartOrder->changed->order_status = '';
+    //   $cartOrder->financial_status = '';
+    //   $cartOrder->changed->financial_status = '';
+    //   $cartOrder->action = '';
+    //   $cartOrder->changed->action = '';
+    // break;
+    case 'cancelled':
+      $cartOrder->order_status = 'Order Cancelled';
+      $cartOrder->changed->order_status = 'Order Cancelled';
+      $cartOrder->financial_status = '';
+      $cartOrder->changed->financial_status = '';
+      $cartOrder->action = 'cancelled order';
+      $cartOrder->changed->action = 'cancelled order';
+    break;
+    case 'refunded':
+      $cartOrder->order_status = 'Order Refund Full';
+      $cartOrder->changed->order_status = 'Order Refund Full';
+      $cartOrder->financial_status = 'Refunded';
+      $cartOrder->changed->financial_status = 'Refunded';
+      $cartOrder->action = 'order refund full';
+      $cartOrder->changed->action = 'order refund full';
+    break;
+    case 'partially_refunded':
+      // Search for: @@ PART REFUND
+    break;
+  }
+}
