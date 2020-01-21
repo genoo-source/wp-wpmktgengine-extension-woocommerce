@@ -1730,12 +1730,31 @@ if(!function_exists('wpme_clear_sess')){
 }
 
 /**
+ * Activity Stream Helper
+ */
+function wpme_fire_activity_stream($order_id = null, $activityStream){
+  // Get API and exit if not present
+  global $WPME_API;
+  if(!$WPME_API){
+    return;
+  }
+  
+}
+
+/**
  * This utility function has been created after some back
  * and forth feedback and helps to decide what the correct
  * activity stream type should be for each action, name etc.
  */
 function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder){
+  /**
+   * Order Status Change - Regular Order
+   */
   $orderStatus = $order->get_status();
+
+  /**
+   * 1. Go through normal status
+   */
   switch($orderStatus){
     case 'failed':
       $cartOrder->order_status = 'Order';
@@ -1790,4 +1809,6 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder){
       // Search for: @@ PART REFUND
     break;
   }
+
+
 }
