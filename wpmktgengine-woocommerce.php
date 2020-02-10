@@ -435,6 +435,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             $cartOrder->shipping_amount = $order->get_total_shipping();
             $cartOrder->changed->shipping_amount = $order->get_total_shipping();
             $cartOrder->addItemsArray($wpmeApiOrderItems);
+            wpme_get_order_stream_decipher($order, $cartOrder);
             $cartOrder->updateOrder(TRUE);
           } catch (\Exception $e){
             //
@@ -657,6 +658,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->email_ordered_from = $cartOrderEmail;
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('WCUOM-2A-4 Order updated in APi.');
                 // Order meta
@@ -814,7 +816,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                             $cartOrder->email_ordered_from = $cartOrderEmail;
                             $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                         }
-
+                        wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
                         $cartOrder->startNewOrder();
                         // Set order meta
@@ -906,6 +908,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->email_ordered_from = $cartOrderEmail;
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 // Update
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('WPC-3B-1 Finished updating order.');
@@ -938,6 +941,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder->action = 'order payment declined';
                 $cartOrder->changed->action = 'order payment declined';
                 // Completed?
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 // Update
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('WOSF-3A-2 Finished updating order.');
@@ -957,8 +961,8 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
             wpme_simple_log('Woocommerce order completed. Genoo order id: ' . $id);
+            $order = new \WC_Order($order_id);
             if(isset($WPME_API) && !empty($id)){
-                $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 $cartOrder->actionOrderFullfillment();
@@ -981,6 +985,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
                 try {
+                    wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log('UPDATED ORDER to COMPLETED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
@@ -1136,7 +1141,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                             $cartOrder->email_ordered_from = $cartOrderEmail;
                             $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                         }
-
+                        wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
                         $cartOrder->startNewOrder();
                         // Set order meta
@@ -1183,6 +1188,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
                 try {
+                    wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
@@ -1218,6 +1224,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
                 try {
+                    wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log('UPDATED ORDER to ON HOLD :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
@@ -1253,6 +1260,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
                 try {
+                    wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
@@ -1284,6 +1292,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder->refund_date = \WPME\Ecommerce\Utils::getDateTime();
                 $cartOrder->refund_amount = $order->get_total_refunded();
                 try {
+                    wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log('UPDATED ORDER to REFUNDED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
@@ -1361,6 +1370,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
             if(isset($WPME_API) && !empty($id)){
                 $refund = new \WC_Order_Refund($refund_id);
+                $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 $cartOrder->actionRefundPartial(
@@ -1374,6 +1384,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder->changed->financial_status = 'paid';
                 $cartOrder->action = 'order refund partial';
                 $cartOrder->changed->action = 'order refund partial';
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('UPDATING ORDER PARTIALLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
@@ -1391,9 +1402,11 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             global $WPME_API;
             if(isset($WPME_API) && !empty($id)){
                 $refund = new \WC_Order_Refund($refund_id);
+                $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 $cartOrder->actionRefundFull($refund->get_refund_reason());
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('UPDATING ORDER FULLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
@@ -1408,9 +1421,11 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
             if(isset($WPME_API) && !empty($id)){
+                $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 $cartOrder->actionCancelled();
+                wpme_get_order_stream_decipher($order, $cartOrder);
                 $cartOrder->updateOrder(TRUE);
                 wpme_simple_log('UPDATING ORDER CANCELLED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
@@ -1738,7 +1753,14 @@ function wpme_fire_activity_stream($order_id = null, $activityStream){
   if(!$WPME_API){
     return;
   }
-  
+  // $WPME_API->putActivity(
+  //   $genoo_id,
+  //   date(),
+  //   $activityType,
+  //   $activityName,
+  //   $activityDescription,
+  //   $activityURL
+  // );
 }
 
 /**
@@ -1809,6 +1831,5 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder){
       // Search for: @@ PART REFUND
     break;
   }
-
-
 }
+
