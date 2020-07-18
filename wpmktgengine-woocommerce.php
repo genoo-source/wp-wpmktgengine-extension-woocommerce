@@ -1442,12 +1442,26 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
             if(isset($WPME_API) && !empty($id)){
-                $order = new \WC_Order($order_id);
-                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
-                $cartOrder->setApi($WPME_API);
-                $cartOrder->actionCancelled();
-                wpme_get_order_stream_decipher($order, $cartOrder);
-                $cartOrder->updateOrder(TRUE);
+                try {
+                  $WPME_API->updateCart(
+                    $id,
+                    array(
+                      'order_status' => 'Order Cancelled',
+                      'action' => 'cancelled order',
+                      
+                    )
+                  );
+                } catch (\Excerption $e){
+
+                }
+                $genoo_lead_id = get_wpme_order_lead_id($id);
+                wpme_fire_activity_stream(
+                  $genoo_lead_id,
+                  'cancelled order',
+                  '#' . $order_id,
+                  '', // Contenat
+                  '' // Permalink
+                );
                 wpme_simple_log_2('UPDATING ORDER CANCELLED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
         }, 10, 1);
