@@ -1698,6 +1698,7 @@ if(!function_exists('wpme_simple_log_2')){
      */
     function wpme_simple_log_2($msg, $filename = 'log.log', $dir = FALSE)
     {
+        return;
         @date_default_timezone_set('UTC');
         @$time = date("Y-M-D h:i:s");
         @$time = '[' . $time . '] ';
