@@ -1966,7 +1966,7 @@ function get_wpme_subscription_activity_name($subscription_id){
   if(!$subscription){
     return;
   }
-  $return = '#' . $subscription_id ' - ';
+  $return = '#' . $subscription_id . ' - ';
   // Iterating through subscription items
   foreach($subscription->get_items() as $item_id => $product_subscription ){
       // Get the name
