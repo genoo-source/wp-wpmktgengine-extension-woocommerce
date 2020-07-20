@@ -1441,7 +1441,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
             global $WPME_API;
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
-            if(isset($WPME_API) && !empty($id)){
+            if(isset($WPME_API) && !empty($id)){  
                 try {
                   $WPME_API->updateCart(
                     $id,
@@ -1698,15 +1698,17 @@ if(!function_exists('wpme_simple_log_2')){
      */
     function wpme_simple_log_2($msg, $filename = 'log.log', $dir = FALSE)
     {
-        return;
         @date_default_timezone_set('UTC');
-        @$time = date("yy-mm-dd h:i:s");
+        @$time = date("Y-M-D h:i:s");
         @$time = '[' . $time . '] ';
         @$saveDir = WPMKTENGINE_ECOMMERCE_LOG_FOLDER;
         if(is_array($msg) || is_object($msg)){
             $msg = print_r($msg, true);
         }
         @error_log($time . $msg . "\n", 3, "./log.log");
+        $log_file_data = './log.log';
+        // if you don't add `FILE_APPEND`, the file will be erased each time you add a log
+        // file_put_contents($log_file_data, $msg . "\n", FILE_APPEND);
     }
 }
 
@@ -1794,21 +1796,27 @@ function wpme_fire_activity_stream(
     wpme_simple_log_2('WSC-05 - Putting Activity: - no api found');
     return;
   }
-  wpme_simple_log_2('WSC-05 - Putting Activitye: ' . var_export(array(
+  wpme_simple_log_2('WSC-05 - Putting Activity: ' . var_export(array(
       $lead_id, 
       $activityType,
       $activityName,
       $activityDescription,
       $activityURL
   ), true));
-  $WPME_API->putActivity(
-    $lead_id,
-    'now',
-    $activityType,
-    $activityName,
-    $activityDescription,
-    $activityURL
-  );
+  try {
+    $WPME_API->putActivity(
+      $lead_id,
+      'now',
+      $activityType,
+      $activityName,
+      $activityDescription,
+      $activityURL
+    );
+  } catch (\Exception $e){
+    wpme_simple_log_2('WSC-05 - Error updating activity' . $e->getMessage());
+    wpme_simple_log_2(var_export($WPME_API->callstack));
+    wpme_simple_log_2(var_export($WPME_API->http));
+  }
 }
 
 /**
@@ -1949,6 +1957,25 @@ function get_wpme_order_lead_id($genoo_id){
   return $order !== false ? $order->user_lid : false;
 }
 
+function get_wpme_subscription_activity_name($subscription_id){
+  if(!$subscription_id){
+    return;
+  }
+  // Get the WC_Subscription object (if needed)
+  $subscription = wc_get_order($subscription_id); // Or: new WC_Subscription($subscription_id); 
+  if(!$subscription){
+    return;
+  }
+  $return = '#' . $subscription_id ' - ';
+  // Iterating through subscription items
+  foreach($subscription->get_items() as $item_id => $product_subscription ){
+      // Get the name
+      $return .= $product_subscription->get_name();
+      $return .= ', ';
+  }
+  return $return;
+}
+
 /**
  * Regular Handle
  */
@@ -1966,7 +1993,7 @@ function wpme_handle_subscription_status_change($subscription, $key){
     return;
   }
   wpme_simple_log_2('WSC-03 - Subscription Change - Genoo ID: ' . $genoo_id);
-  $cartOrder = new \WPME\Ecommerce\CartOrder($wpmeOrderId);
+  $cartOrder = new \WPME\Ecommerce\CartOrder($genoo_id);
   $cartOrder->setApi($WPME_API);
   // Set data
   wpme_get_order_stream_decipher($subscription, $cartOrder, $key);
@@ -1974,7 +2001,26 @@ function wpme_handle_subscription_status_change($subscription, $key){
   $cartOrder->updateOrder(TRUE);
 };
 add_action('woocommerce_subscription_payment_complete', function($subscription){
-  return wpme_handle_subscription_status_change($subscription, 'woocommerce_subscription_payment_complete');
+  wpme_handle_subscription_status_change($subscription, 'woocommerce_subscription_payment_complete');
+  // Fire activity that API doesn't fire
+  wpme_simple_log_2('WSC-12-A - Payment complete ' . var_export($subscription->id, true));
+  $genoo_id = get_wpme_order_from_woo_order($subscription);
+  if(!$genoo_id){
+    return;
+  }
+  wpme_simple_log_2('WSC-12-B - Payment complete - Genoo ID: ' . $genoo_id);
+  $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
+  if(!$genoo_lead_id){
+    return;
+  }
+  wpme_simple_log_2('WSC-12-C - Payment complete - Lead ID: ' . $genoo_lead_id);
+  wpme_fire_activity_stream(
+    $genoo_lead_id,
+    'subscription payment',
+    get_wpme_subscription_activity_name($subscription->id), // Title
+    get_wpme_subscription_activity_name($subscription->id), // Content
+    ' ' // Permalink
+  );
 }, 10, 1);
 add_action('woocommerce_subscription_renewal_payment_complete', function($subscription){
   return wpme_handle_subscription_status_change($subscription, 'woocommerce_subscription_renewal_payment_complete');
@@ -2001,9 +2047,9 @@ add_action('woocommerce_subscription_status_active', function($subscription){
   wpme_fire_activity_stream(
     $genoo_lead_id,
     'subscription started',
-    '', // Title
-    '', // Content
-    '' // Permalink
+    get_wpme_subscription_activity_name($subscription->id), // Title
+    get_wpme_subscription_activity_name($subscription->id), // Content
+    ' ' // Permalink
   );
 }, 10, 1);
 
@@ -2024,8 +2070,8 @@ add_action('woocommerce_subscription_status_cancelled', function($subscription){
   wpme_fire_activity_stream(
     $genoo_lead_id,
     'subscription cancelled',
-    '', // Title
-    '', // Content
-    '' // Permalink
+    get_wpme_subscription_activity_name($subscription->id), // Title
+    get_wpme_subscription_activity_name($subscription->id), // Content
+    ' ' // Permalink
   );
 }, 10, 1);
