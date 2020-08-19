@@ -5,7 +5,7 @@ Requires at least: 3.3
 Tested up to: 5.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.5.90
+Stable tag: 1.6.0
 
 Understand how your leads and customers are participating with your ecommerce.
 
@@ -42,6 +42,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+= 1.6.0 =
+* Fix Woo Division by zero bug
 
 = 1.5.6 =
 * WooFunnels Upsell Plugin bridge

@@ -48,7 +48,9 @@ class VariantCart
                     $array['product_id'] = $id;
                     $array['quantity'] = $item['quantity'];
                     $array['total_price'] = $item['line_total'];
-                    $array['unit_price'] = $item['line_total'] / $array['quantity'];
+                    if($array['quantity'] != 0){
+                      $array['unit_price'] = $item['line_total'] / $array['quantity'];
+                    }
                     $array['external_product_id'] = $item['product_id'];
                     $array['name'] = get_the_title($item['product_id']);
 	                if(array_key_exists('variation_id', $item) && array_key_exists('variation', $item) && !empty($item['variation'])){
