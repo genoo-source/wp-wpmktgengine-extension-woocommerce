@@ -578,7 +578,9 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                     wpme_simple_log_2('WCC-2B-3 Setting a lead.');
                     $atts = apply_filters(
                         'genoo_wpme_lead_creation_attributes',
-                        array(),
+                        array(
+                          'source' => 'eCommerce Order'
+                        ),
                         'ecommerce-register-new-customer-lead'
                     );
                     $leadNew = $WPME_API->setLead(
@@ -752,6 +754,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                                 'country' => $cartAddress['country'],
                                 'zip' => $cartAddress['postcode'],
                                 'mobilephone' => $cartAddress['phone'],
+                                'source' => 'eCommerce Order'
                             ),
                             'ecommerce-new-order-lead'
                         );
@@ -1077,6 +1080,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                                 'country' => $cartAddress['country'],
                                 'zip' => $cartAddress['postcode'],
                                 'mobilephone' => $cartAddress['phone'],
+                                'source' => 'eCommerce Order'
                             ),
                             'ecommerce-new-order-lead'
                         );
