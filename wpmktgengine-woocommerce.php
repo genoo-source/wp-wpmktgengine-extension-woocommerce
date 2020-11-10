@@ -1399,8 +1399,8 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 // @@ PART REFUND
-                $cartOrder->order_status = 'Order Refund Paid Partial';
-                $cartOrder->changed->order_status = 'Order Refund Paid Partial';
+                $cartOrder->order_status = 'Refund Partial';
+                $cartOrder->changed->order_status = 'Refund Partial';
                 $cartOrder->updateOrder(TRUE);
                 // Get lead
                 $genoo_lead_id = get_wpme_order_lead_id($id);
@@ -1873,16 +1873,16 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
     //   $cartOrder->changed->action = '';
     // break;
     case 'cancelled':
-      $cartOrder->order_status = 'Order Cancelled';
-      $cartOrder->changed->order_status = 'Order Cancelled';
+      $cartOrder->order_status = 'Cancelled';
+      $cartOrder->changed->order_status = 'Cancelled';
       $cartOrder->financial_status = '';
       $cartOrder->changed->financial_status = '';
       $cartOrder->action = 'cancelled order';
       $cartOrder->changed->action = 'cancelled order';
     break;
     case 'refunded':
-      $cartOrder->order_status = 'Order Refund Full';
-      $cartOrder->changed->order_status = 'Order Refund Full';
+      $cartOrder->order_status = 'Refund Full';
+      $cartOrder->changed->order_status = 'Refund Full';
       $cartOrder->financial_status = 'Refunded';
       $cartOrder->changed->financial_status = 'Refunded';
       $cartOrder->action = 'order refund full';
