@@ -1692,7 +1692,6 @@ if(!function_exists('wpme_can_continue_cookie_email'))
     }
 }
 
-
 if(!function_exists('wpme_simple_log_2')){
 
     /**
@@ -1702,6 +1701,7 @@ if(!function_exists('wpme_simple_log_2')){
      */
     function wpme_simple_log_2($msg, $filename = 'log.log', $dir = FALSE)
     {
+        \Tracy\Debugger::barDump($msg);
         return;
         @date_default_timezone_set('UTC');
         @$time = date("Y-M-D h:i:s");
@@ -1919,6 +1919,23 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
       $cartOrder->changed->action = 'subscription payment declined';
     break;
   }
+
+  /**
+   * Amend Subscription Payment and order Value in that case
+   */
+  switch($orderStatus){
+    case 'woocommerce_subscription_payment_complete':
+    case 'woocommerce_subscription_renewal_payment_complete':
+      $parent = $order->get_parent_id();
+      if($parent !== 0){
+        // This order has a parent
+        $parentFull = $order->get_parent();
+        $cartOrder->setTotal($parentFull->get_total());
+        $cartOrder->tax_amount = $parentFull->get_total_tax();
+        $cartOrder->changed->tax_amount = $parentFull->get_total_tax();
+      } 
+    break;
+  }
 }
 
 /**
@@ -1971,7 +1988,13 @@ function get_wpme_subscription_activity_name($subscription_id){
   if(!$subscription){
     return;
   }
-  $return = '#' . $subscription_id . ' - ';
+  
+  $parent_order_id = $subscription->get_parent_id();
+  if(!$parent_order_id){
+    return;
+  }
+
+  $return = '#' . $parent_order_id . ' - ';
   // Iterating through subscription items
   foreach($subscription->get_items() as $item_id => $product_subscription ){
       // Get the name
