@@ -1822,7 +1822,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
   switch($orderStatus){
     case 'failed':
       $cartOrder->order_status = 'Order';
-      if(empty($subscriptions_ids)): $cartOrder->changed->order_status = 'order payment declined'; else : $cartOrder->changed->order_status = 'supscription order payment declined1'; endif;
+      if(empty($subscriptions_ids)): $cartOrder->changed->order_status = 'order payment declined'; else : $cartOrder->changed->order_status = 'subscription order payment declined'; endif;
       $cartOrder->financial_status = 'declined';
       $cartOrder->changed->financial_status = 'declined';
       $cartOrder->action = 'order payment declined';
