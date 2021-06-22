@@ -563,8 +563,8 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 try {
                     wpme_simple_log_2('WCC-2B-1 Lead not found by email.');
                     // NO lead, create one
-                    $leadTypeFirst = wpme_get_customer_lead_type();
-                    $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
+                  //  $leadTypeFirst = wpme_get_customer_lead_type();
+                    //$leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
                     if($leadTypeFirst !== FALSE && !is_null($leadTypeFirst) && is_numeric($leadTypeFirst)){
                         $leadType = $leadTypeFirst;
                     }
@@ -621,7 +621,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
         add_action('woocommerce_checkout_update_order_meta', function($order_id, $data){
 
              global $WPME_API;
-
+     $leadTYpe = wpme_get_customer_lead_type();
             wpme_simple_log_2('WCUOM-1 Updating order meta after checkout.');
             // Global api
             global $WPME_API;
@@ -665,7 +665,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 // Add email and leadType
                 //ec_lead_type_id = lead type ID
                 //email_ordered_from = email address making the sale
-                $leadTYpe = wpme_get_customer_lead_type();
+                
                 $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
                 $cartOrder->changed->ec_lead_type_id = $leadTYpe;
                 $cartOrder->email_ordered_from = $email;
@@ -738,9 +738,9 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                         wpme_simple_log_2('WCUOM-2B-2A-3A-1 Trying to get lead by email.');
                         // Lead exists, ok, set up Lead ID
                         // NO lead, create one
-                        $leadTypeFirst = wpme_get_customer_lead_type();
+                        $leadTypeFirst = $leadTYpe;
                         wpme_simple_log_2('WCUOM-2B-2A-3A-1B-2 Creating one, leadtype: ' . $leadTypeFirst);
-                        $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
+                      //  $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
                         if($leadTypeFirst !== FALSE && !is_null($leadTypeFirst) && is_numeric($leadTypeFirst)){
                             $leadType = $leadTypeFirst;
                         }
@@ -1073,7 +1073,7 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                         // NO lead, create one
                         $leadTypeFirst = wpme_get_customer_lead_type();
                         wpme_simple_log_2('WCUOM-2B-2A-3A-1B-2 Creating one, leadtype: ' . $leadTypeFirst);
-                        $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
+                     //   $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
                         if($leadTypeFirst !== FALSE && !is_null($leadTypeFirst) && is_numeric($leadTypeFirst)){
                             $leadType = $leadTypeFirst;
                         }
@@ -1157,9 +1157,9 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                         // Add email and leadType
                         //ec_lead_type_id = lead type ID
                         //email_ordered_from = email address making the sale
-                        $leadTYpe = wpme_get_customer_lead_type();
-                        $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
-                        $cartOrder->changed->ec_lead_type_id = $leadTYpe;
+                       $leadTYpe = wpme_get_customer_lead_type();
+                       $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
+                       $cartOrder->changed->ec_lead_type_id = $leadTYpe;
                         $cartOrder->email_ordered_from = $email;
                         $cartOrder->changed->email_ordered_from = $email;
                         $cartOrder->tax_amount = $order->get_total_tax();
@@ -1210,8 +1210,8 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder->shipping_amount = $order->get_total_shipping();
                 // Completed?
-                $cartOrder->order_status = 'order1';
-                $cartOrder->changed->order_status = 'order1';
+                $cartOrder->order_status = 'order';
+                $cartOrder->changed->order_status = 'order';
                 // From email
                 $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
                 if($cartOrderEmail !== FALSE){
@@ -1248,8 +1248,8 @@ add_action('wpmktengine_init', function($repositarySettings, $api, $cache){
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder->shipping_amount = $order->get_total_shipping();
                 // Completed?
-                $cartOrder->order_status = 'order1';
-                $cartOrder->changed->order_status = 'order1';
+                $cartOrder->order_status = 'order';
+                $cartOrder->changed->order_status = 'order';
                 // From email
                 $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
                 if($cartOrderEmail !== FALSE){
@@ -1781,9 +1781,12 @@ function wpme_fire_activity_stream(
       $activityURL
   ), true));
   try {
+
+    $date = new DateTime("now", new DateTimeZone('America/Chicago') );
+    $dater = $date->format('Y-m-d H:i:s');
     $WPME_API->putActivity(
       $lead_id,
-      'now',
+       $dater,
       $activityType,
       $activityName,
       $activityDescription,
@@ -2019,14 +2022,8 @@ add_action('woocommerce_subscription_payment_complete', function($subscription) 
                 get_wpme_subscription_activity_name($order->parent_id), // Content
                 ' ' // Permalink
               );
-                //subscription completed
-              wpme_fire_activity_stream(
-                $genoo_lead_id,
-                'subscription completed',
-                get_wpme_subscription_activity_name($order->parent_id), // Title
-                get_wpme_subscription_activity_name($order->parent_id), // Content
-                ' ' // Permalink
-              );
+              
+         
             endif;
              
          
@@ -2104,7 +2101,7 @@ add_action('woocommerce_subscription_renewal_payment_complete', function($subscr
         function on_reactive($subscription)         
         {
                     
-                  if($subscription->suspension_count != 0):
+                 if($subscription->suspension_count != 0):
                      
                  $genoo_id = get_wpme_order_from_woo_order($subscription);
               
@@ -2162,14 +2159,15 @@ add_action('woocommerce_subscription_renewal_payment_complete', function($subscr
  
            }
 
-//woocommerce order status as hold
+//woocommerce order status as hold woocommerce_customer_changed_subscription_to_on-hold woocommerce_subscription_status_on-hold
 
-  add_action("woocommerce_customer_changed_subscription_to_on-hold", "on_hold_subscription", 10,2);
+  add_action("woocommerce_subscription_status_on-hold", "on_hold_subscription", 10,2);
          
          function on_hold_subscription($subscription)
          {
            
             $genoo_id = get_wpme_order_from_woo_order($subscription);
+              $order = new \WC_Order($subscription->id);
                   if(!$genoo_id){
                     return;
                   }
@@ -2182,8 +2180,8 @@ add_action('woocommerce_subscription_renewal_payment_complete', function($subscr
                   wpme_fire_activity_stream(
                     $genoo_lead_id,
                     'subscription on hold',
-                    get_wpme_subscription_activity_name($subscription->id), // Title
-                    get_wpme_subscription_activity_name($subscription->id), // Content
+                    get_wpme_subscription_activity_name($order->parent_id), // Title
+                    get_wpme_subscription_activity_name($order->parent_id), // Content
                     ' ' // Permalink
                   );
 
@@ -2194,6 +2192,7 @@ add_action('woocommerce_subscription_renewal_payment_complete', function($subscr
 add_action('woocommerce_subscription_status_cancelled', function($subscription){
   wpme_simple_log_2('WSC-01 - Subscription Cancelled: ' . var_export($subscription->id, true));
   $genoo_id = get_wpme_order_from_woo_order($subscription);
+  $order = new \WC_Order($subscription->id);
   if(!$genoo_id){
     return;
   }
@@ -2206,8 +2205,8 @@ add_action('woocommerce_subscription_status_cancelled', function($subscription){
   wpme_fire_activity_stream(
     $genoo_lead_id,
     'subscription cancelled',
-    get_wpme_subscription_activity_name($subscription->id), // Title
-    get_wpme_subscription_activity_name($subscription->id), // Content
+    get_wpme_subscription_activity_name($order->parent_id), // Title
+    get_wpme_subscription_activity_name($order->parent_id), // Content
     ' ' // Permalink
   );
 }, 10, 1);
@@ -2217,8 +2216,10 @@ add_action('woocommerce_subscription_status_cancelled', function($subscription){
 add_action('woocommerce_subscription_status_pending-cancel', 'pending_cancel_subscription', 10, 1 );
 
 function pending_cancel_subscription( $subscription ) {
+    $order = new \WC_Order($subscription->id);
   wpme_simple_log_2('WSC-01 -  Subscription Pending Cancellation: ' . var_export($subscription->id, true));
   $genoo_id = get_wpme_order_from_woo_order($subscription);
+  $order = new \WC_Order($subscription->id);
   if(!$genoo_id){
     return;
   }
@@ -2228,14 +2229,75 @@ function pending_cancel_subscription( $subscription ) {
     return;
   }
   wpme_simple_log_2('WSC-01-B -  Subscription Pending Cancellation - Lead ID: ' . $genoo_lead_id);
+  
   wpme_fire_activity_stream(
     $genoo_lead_id,
     'Subscription Pending Cancellation',
-    get_wpme_subscription_activity_name($subscription->id), // Title
-    get_wpme_subscription_activity_name($subscription->id), // Content
+    get_wpme_subscription_activity_name($order->parent_id), // Title
+    get_wpme_subscription_activity_name($order->parent_id), // Content
     ' ' // Permalink
   );    
 }
+
+add_action( 'subscription_expired', 'subscriptonexpired', 10, 2 );
+
+function subscriptonexpired( $user_id, $subscription_key ) {
+   // custom_logs($subscription_key);
+    $sub= wcs_get_subscription_from_key( $subscription_key );
+    
+    // subscription expired
+    
+      /*  $genoo_id = get_wpme_order_from_woo_order($subscription);
+              
+                  if(!$genoo_id){
+                    return;
+                  }
+                  
+                  wpme_simple_log_2('WSC-01-A - Subscription activated- Genoo ID: ' . $genoo_id);
+                  
+                  $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
+                  
+    
+     wpme_fire_activity_stream(
+                $genoo_lead_id,
+                'subscription completed',
+                get_wpme_subscription_activity_name($order->parent_id), // Title
+                get_wpme_subscription_activity_name($order->parent_id), // Content
+                ' ' // Permalink
+              );
+    */
+    
+}
+//subscription expired
+add_action( 'woocommerce_subscription_status_expired', 'my_on_subscription_expired', 10 );
+function my_on_subscription_expired( $subscription ) {
+    
+    $order = new \WC_Order($subscription->id);
+    
+        $genoo_id = get_wpme_order_from_woo_order($subscription);
+              
+                  if(!$genoo_id){
+                    return;
+                  }
+                  
+                  wpme_simple_log_2('WSC-01-A - Subscription activated- Genoo ID: ' . $genoo_id);
+                  
+                  $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
+                  
+    
+             wpme_fire_activity_stream(
+                $genoo_lead_id,
+                'subscription completed',
+                get_wpme_subscription_activity_name($order->parent_id), // Title
+                get_wpme_subscription_activity_name($order->parent_id), // Content
+                ' ' // Permalink
+              );
+    
+    
+}
+
+
+
 
 
 
