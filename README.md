@@ -11,9 +11,9 @@ Travis CI will auto deploy when a new tag is created. Do this after the PR is me
 # In project root
 # This will increment the version number and echo it in the terminal
 $ sh deploy/increment.sh
-$ New version: 5.7.11
+$ New version: 1.7.0
 # Copy that version and add a git tag
-$ git tag -a 5.7.11 -m "Release: 5.7.11"
+$ git tag -a 1.7.0 -m "Release: 1.7.0"
 $ git push origin master --tags
 ~~~~
 

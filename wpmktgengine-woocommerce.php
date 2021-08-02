@@ -1262,9 +1262,10 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                         $leadNew = $WPME_API->setLead((int)$leadType, $email, $lead_first, $lead_last, '', true, $attributes);
                         wpme_simple_log_2('WCUOM-2B-2A-3A-1B-3 New Lead: ' . $leadNew);
                         $leadNew = (int)$leadNew;
-                        if (function_exists('clearRefferalFromSession'))
+                        if (function_exists('clearRefferalFromSession')){
                             clearRefferalFromSession();
                         }
+                        
                         if (!is_null($leadNew) && $leadNew > 0)
                         {
                             // We have a lead id
