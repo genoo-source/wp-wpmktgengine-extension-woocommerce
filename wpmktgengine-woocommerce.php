@@ -744,6 +744,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                 $cartOrder->email_ordered_from = $email;
                 $cartOrder
                     ->changed->email_ordered_from = $email;
+                $cartOrder->financial_status = 'paid';
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder
                     ->changed->tax_amount = $order->get_total_tax();
@@ -1152,7 +1153,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                 $cartOrder->total_price = $order->get_total();
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder->shipping_amount = $order->get_total_shipping();
-                $cartOrder->financial_status = 'paid';
+               // $cartOrder->financial_status = 'paid';
                 // Completed?
                 $cartOrder->completed_date = \WPME\Ecommerce\Utils::getDateTime();
                 $cartOrder
@@ -1297,7 +1298,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                         $cartOrder = new \WPME\Ecommerce\CartOrder();
                         $cartOrder->setApi($WPME_API);
                         $cartOrder->setUser($lead_id);
-                        $cartOrder->actionNewOrder();
+                       // $cartOrder->actionNewOrder();
                         $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
                         $cartOrder->setShippingAddress($cartAddress2['address_1'], $cartAddress2['address_2'], $cartAddress2['city'], $cartAddress2['country'], $cartAddress2['phone'], $cartAddress2['postcode'], '', $cartAddress2['state']);
                         $cartOrder->order_number = $order_id;
