@@ -744,7 +744,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                 $cartOrder->email_ordered_from = $email;
                 $cartOrder
                     ->changed->email_ordered_from = $email;
-                //$cartOrder->financial_status = 'Paid';
+                //$cartOrder->financial_status = 'paid';
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder
                     ->changed->tax_amount = $order->get_total_tax();
@@ -951,9 +951,8 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
         add_action('woocommerce_payment_complete', function ($order_id)
         {
             wpme_simple_log_2('WPC-1 Payment complete.');
-
-            // Get API
-            global $WPME_API;
+            
+          global $WPME_API;
 
             // Genoo order ID
             $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
@@ -1046,7 +1045,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                                 $cartOrder->order_status = 'SubRenewal';
                                 $cartOrder
                                     ->changed->order_status = 'SubRenewal';
-                                    $cartOrder->financial_status = 'Paid';
+                                    $cartOrder->financial_status = 'paid';
                                     
                                 $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                                 wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
@@ -1143,7 +1142,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache)
                 $cartOrder->total_price = $order->get_total();
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder->shipping_amount = $order->get_total_shipping();
-               // $cartOrder->financial_status = 'Paid';
+               // $cartOrder->financial_status = 'paid';
                 // Completed?
                 $cartOrder->completed_date = \WPME\Ecommerce\Utils::getDateTime();
                 $cartOrder
@@ -2151,9 +2150,9 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 $cartOrder
                     ->changed->order_status = 'sub payment';
             endif;
-            $cartOrder->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
             $cartOrder
-                ->changed->financial_status = 'Paid';
+                ->changed->financial_status = 'paid';
             $cartOrder->action = 'new order';
             $cartOrder
                 ->changed->action = 'new order';
@@ -2162,17 +2161,17 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->order_status = 'New Order';
             $cartOrder
                 ->changed->order_status = 'New Order';
-            $cartOrder->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
             $cartOrder
-                ->changed->financial_status = 'Paid';
+                ->changed->financial_status = 'paid';
 
         case 'completed':
             $cartOrder->order_status = 'Completed Order';
             $cartOrder
                 ->changed->order_status = 'Completed Order';
-            $cartOrder->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
             $cartOrder
-                ->changed->financial_status = 'Paid';
+                ->changed->financial_status = 'paid';
             $cartOrder->action = 'completed order';
             $cartOrder
                 ->changed->action = 'completed order';
@@ -2210,16 +2209,16 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             /*case 'woocommerce_subscription_payment_complete':
             $cartOrder->order_status = 'Subscription Order';
             $cartOrder->changed->order_status = 'Subscription Order';
-            $cartOrder->financial_status = 'Paid';
-            $cartOrder->changed->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
+            $cartOrder->changed->financial_status = 'paid';
             $cartOrder->action = 'subscription payment';
             $cartOrder->changed->action = 'subscription payment';
             break;
             case 'woocommerce_subscription_renewal_payment_complete':
             $cartOrder->order_status = 'Subscription Payment';
             $cartOrder->changed->order_status = 'Subscription Payment';
-            $cartOrder->financial_status = 'Paid';
-            $cartOrder->changed->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
+            $cartOrder->changed->financial_status = 'paid';
             $cartOrder->action = 'sub renewal';
             $cartOrder->changed->action = 'sub renewal';
             break;*/
@@ -2387,7 +2386,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 // Completed?
                 $cartOrder->order_status = 'subpayment';
                 $cartOrder->changed->order_status = 'subpayment';
-                $cartOrder->financial_status = 'Paid';
+                $cartOrder->financial_status = 'paid';
                  
                  
                 // From email
@@ -2647,7 +2646,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->shipping_amount = $order->get_total_shipping();
             $cartOrder->order_status = 'SubRenewal';
             $cartOrder->changed->order_status = 'SubRenewal';
-            $cartOrder->financial_status = 'Paid';
+            $cartOrder->financial_status = 'paid';
             
             /* $cartOrder->action = 'sub renewal';
              $cartOrder->changed->action = 'sub renewal';*/
