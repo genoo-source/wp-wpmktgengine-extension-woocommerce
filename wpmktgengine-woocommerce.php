@@ -990,27 +990,25 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
                     {
                         wpme_simple_log_2('WPC-3A-1 Order found, changing status.');
                         $order_genoo_id = $id;
-
-                   // custom_logs($order_id);
-                   
-                      $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
-                      $cartOrder->setApi($WPME_API);
-                      $order = new \WC_Order($order_id);
-                      $cartOrder = new \WPME\Ecommerce\CartOrder();
-                      $cartOrder->setApi($WPME_API);
-                      $cartOrder->setUser($lead_id);
-                      $cartOrder->actionNewOrder();
-                      $cartAddress = $order->get_address('billing');
-                      $cartAddress2 = $order->get_address('shipping');
-                      $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
-                      $cartOrder->setApi($WPME_API);
-                      // $cartOrder->actionNewOrder();
-                      $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
-                      $cartOrder->setShippingAddress($cartAddress2['address_1'], $cartAddress2['address_2'], $cartAddress2['city'], $cartAddress2['country'], $cartAddress2['phone'], $cartAddress2['postcode'], '', $cartAddress2['state']);
-                      $cartOrder->order_number = $order_id;
-                      $cartOrder->currency = $order->get_order_currency();
-                      $cartOrder->setTotal($order->get_total());
-                      $cartOrder->addItemsArray($wpmeApiOrderItems);
+			
+		    $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
+		    $cartOrder->setApi($WPME_API);
+		    $order = new \WC_Order($order_id);
+		    $cartOrder = new \WPME\Ecommerce\CartOrder();
+		    $cartOrder->setApi($WPME_API);
+		    $cartOrder->setUser($lead_id);
+		    $cartOrder->actionNewOrder();
+		    $cartAddress = $order->get_address('billing');
+		    $cartAddress2 = $order->get_address('shipping');
+		    $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
+		    $cartOrder->setApi($WPME_API);
+		    // $cartOrder->actionNewOrder();
+		    $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
+		    $cartOrder->setShippingAddress($cartAddress2['address_1'], $cartAddress2['address_2'], $cartAddress2['city'], $cartAddress2['country'], $cartAddress2['phone'], $cartAddress2['postcode'], '', $cartAddress2['state']);
+		    $cartOrder->order_number = $order_id;
+		     $cartOrder->currency = $order->get_order_currency();
+		     $cartOrder->setTotal($order->get_total());
+		     $cartOrder->addItemsArray($wpmeApiOrderItems);
                         // Add email and leadType
                         //ec_lead_type_id = lead type ID
                         //email_ordered_from = email address making the sale
