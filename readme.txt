@@ -16,7 +16,7 @@ Understand how your leads and customers are participating with your ecommerce sy
 = Requirements =
 
 1. Wordpress at least version 3.3
-2. PHP at least version 7.4
+2. PHP at least version 5.3.1
 3. Active WPMktgEngine account (http://wpmktgengine.com)
 
 == Installation ==
