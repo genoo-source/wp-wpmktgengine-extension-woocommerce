@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.3
+    Version: 1.7.4
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -707,12 +707,15 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
 
         global $WPME_API;
         $leadTYpe = wpme_get_customer_lead_type();
-        $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
-                'order_type' => 'any'
-        ));
+        
+        $order = wc_get_order( $order_id );
+        
+
+                
+    
         wpme_simple_log_2('WCUOM-1 Updating order meta after checkout.');
             // Global api
-        global $WPME_API;
+  
             // Let's do this
             // It might actually never get here ...
         if (isset($WPME_API) && isset(WC()
@@ -730,6 +733,17 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
             $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
             $cartOrder->setApi($WPME_API);
                // $cartOrder->actionNewOrder();
+			   
+        $order = wc_get_order( $order_id );
+        
+        foreach ( $order->get_items() as $item_id => $item ) {
+         
+        $changedItemData = $item->get_data();
+                                // Let's see if this is in
+             $product = wc_get_product( $changedItemData['product_id'] ); // Get the WC_Product Object
+             
+          
+        }
             $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
             $cartOrder->setShippingAddress($cartAddress2['address_1'], $cartAddress2['address_2'], $cartAddress2['city'], $cartAddress2['country'], $cartAddress2['phone'], $cartAddress2['postcode'], '', $cartAddress2['state']);
             $cartOrder->order_number = $order_id;
@@ -760,6 +774,9 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
                         ->changed->email_ordered_from = $cartOrderEmail;
             }
                 //  wpme_get_order_stream_decipher($order, $cartOrder);
+               if($product->get_type() != 'subscription' && $product->get_type() != 'variable-subscription') { 
+                 $cartOrder->financial_status = 'paid';
+                 }
             $cartOrder->updateOrder(true);
             wpme_simple_log_2('WCUOM-2A-4 Order updated in APi.');
                 // Order meta
@@ -767,6 +784,9 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
             \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $order_genoo_id);
                 //order meta
                 // Remove session id
+                // $cartOrder->financial_status = 'paid';
+                                    
+                           
             wpme_simple_log_2('WCUOM-2A-5 Finished ORDER from CART, Genoo ID:' . WC()
                     ->session->{WPMKTENGINE_ORDER_KEY});
             wpme_simple_log_2('WCUOM-2A-6 Finished ORDER from CART, WooCommerce ID:' . $order_id);
@@ -948,18 +968,27 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
         /**
          * Order furfilled
          */
-    add_action('woocommerce_payment_complete', function ($order_id)
+ add_action('woocommerce_payment_complete', function ($order_id)
         {
         wpme_simple_log_2('WPC-1 Payment complete.');
+      
         global $WPME_API;
         // Genoo order ID
         $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
                 'order_type' => 'any'
             ));
-
+            
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
+       
+        if(!empty($subscriptions_ids) && $getrenewal) :
 
         foreach ($subscriptions_ids as $subscriptions_id):
+            
+              $manual = get_post_meta($subscriptions_id->id, '_requires_manual_renewal', true);
+              
+           
+
+                if ($getrenewal && $manual == 'false'):
         
         $get_order = wc_get_order($subscriptions_id->get_parent_id());
 
@@ -980,9 +1009,7 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
                  }
                 }
 
-                $manual = get_post_meta($subscriptions_id->id, '_requires_manual_renewal', true);
-
-                if ($getrenewal && $manual == 'false'):
+              
                     $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
                     wpme_simple_log_2('WPC-2 Payment Complete for order: ' . $order_id);
                     wpme_simple_log_2('WPC-3 Woocommerce order: ' . $id);
@@ -1035,7 +1062,7 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
                         }
                        // wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
-                        $cartOrder->startNewOrder();
+                       // $cartOrder->startNewOrder();
                         // Set order meta
                         \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
 
@@ -1058,7 +1085,7 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
                     }
                 endif;
             endforeach; // Payed!
-            
+            endif;
         });
 
         /**
@@ -1066,6 +1093,7 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
          */
         add_action('woocommerce_order_status_failed', function ($order_id, $that)
         {
+            
             wpme_simple_log_2('WOSF-1 Payment failed.');
             // Get API
             global $WPME_API;
@@ -1112,268 +1140,7 @@ add_action('woocommerce_checkout_update_order_meta', function ($order_id, $data)
         }
         , 10, 2);
 
-        /**
-         * Order Completed
-         */
-        add_action('woocommerce_order_status_completed', function ($order_id)
-        {
-            // Get API
-            global $WPME_API;
-            // Genoo order ID
-            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-            wpme_simple_log_2('Woocommerce order completed. Genoo order id: ' . $id);
-            $order = new \WC_Order($order_id);
-            if (isset($WPME_API) && !empty($id))
-            {
-                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
-                $cartOrder->setApi($WPME_API);
-                $cartOrder->actionOrderFullfillment();
-                // Total price
-                //$cartOrder->total_price = (float)$order->get_total();
-                $cartOrder->total_price = $order->get_total();
-                $cartOrder->tax_amount = $order->get_total_tax();
-                $cartOrder->shipping_amount = $order->get_total_shipping();
-               // $cartOrder->financial_status = 'paid';
-                // Completed?
-                $cartOrder->completed_date = \WPME\Ecommerce\Utils::getDateTime();
-                $cartOrder
-                    ->changed->completed_date = \WPME\Ecommerce\Utils::getDateTime();
-                // Completed?
-                $cartOrder->order_status = 'completed';
-                $cartOrder
-                    ->changed->order_status = 'completed';
-                // From email
-                $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
-                if ($cartOrderEmail !== false)
-                {
-                    $cartOrder->email_ordered_from = $cartOrderEmail;
-                    $cartOrder
-                        ->changed->email_ordered_from = $cartOrderEmail;
-                }
-                try
-                {
-                    wpme_get_order_stream_decipher($order, $cartOrder);
-                    $cartOrder->updateOrder(true);
-                    wpme_simple_log_2('UPDATED ORDER to COMPLETED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
-                }
-                catch(\Exception $e)
-                {
-                    wpme_simple_log_2('Finished ORDER, Genoo ID:' . $cartOrder->id);
-                    wpme_simple_log_2('FAILED to updated order to COMPLETED :' . $id . ' : WOO ID : ' . $order_id . ' : Because : ' . $e->getMessage());
-                }
-            }
-            elseif (isset($WPME_API))
-            {
-                // New order? ok create it
-                wpme_simple_log_2('WCUOM-2B-1 New order from cart.');
-                // At this point, we need to start a cart, change it to new order, add everything.
-                // and firstly, creat a lead.
-                // 1. Create a lead get if exists
-                // Do we have an email?
-                @$order = new \WC_Order($order_id);
-                $email = $order->get_billing_email();
-                wpme_simple_log_2('WCUOM-2B-2 New ORDER, creating LEAD for email :' . $email);
-                if ($email !== false)
-                {
-                    wpme_simple_log_2('WCUOM-2B-2A-1 Email exists, getting session data and lead info.');
-                    // Get order & adresses
-                    $session = WC()->session;
-                    @$order = new \WC_Order($order_id);
-                    $cartAddress = $order->get_address('billing');
-                    $cartAddress2 = $order->get_address('shipping');
-                    @$lead_first = isset($data['billing_first_name']) ? $data['billing_first_name'] : null;
-                    @$lead_last = isset($data['billing_last_name']) ? $data['billing_last_name'] : null;
-                    if (empty($lead_first) && empty($lead_last))
-                    {
-                        // If both are empty, try from order?
-                        @$lead_first = $cartAddress['first_name'];
-                        @$lead_last = $cartAddress['last_name'];
-                        // If still empty try shipping name?
-                        if (empty($lead_first) && empty($lead_last))
-                        {
-                            // If both are empty
-                            @$lead_first = $cartAddress2['first_name'];
-                            @$lead_last = $cartAddress2['last_name'];
-                        }
-                        if (empty($lead_first) && empty($lead_last))
-                        {
-                            // If both are empty
-                            @$lead_first = isset($data['shipping_first_name']) ? $data['shipping_first_name'] : null;
-                            @$lead_last = isset($data['shipping_last_name']) ? $data['shipping_last_name'] : null;
-                        }
-                        if (empty($lead_first) && empty($lead_last))
-                        {
-                            // If both are empty
-                            @$lead_first = wpme_get_first_name_from_request();
-                            @$lead_last = wpme_get_last_name_from_request();
-                        }
-                    }
-                    wpme_simple_log_2('WCUOM-2B-2A-2 Tried to get first and last name:' . $lead_first . ' ' . $lead_last);
-                    wpme_simple_log_2('WCUOM-2B-2A-3 Lead info to be created: ' . print_r(array(
-                        $lead_first,
-                        $lead_last,
-                        $cartAddress,
-                        $cartAddress2
-                    ) , true));
-                    // Lead null for now
-                    $lead_id = NULL;
-                    try
-                    {
-                        wpme_simple_log_2('WCUOM-2B-2A-3A-1 Trying to get lead by email.');
-                        // Lead exists, ok, set up Lead ID
-                        // NO lead, create one
-                        $leadTypeFirst = wpme_get_customer_lead_type();
-                        wpme_simple_log_2('WCUOM-2B-2A-3A-1B-2 Creating one, leadtype: ' . $leadTypeFirst);
-                        //   $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
-                        if ($leadTypeFirst !== false && !is_null($leadTypeFirst) && is_numeric($leadTypeFirst))
-                        {
-                            $leadType = $leadTypeFirst;
-                        }
-                        $attributes = apply_filters('genoo_wpme_lead_creation_attributes', array(
-                            'organization' => '',
-                            'address1' => $cartAddress['address_1'],
-                            'address2' => $cartAddress['address_2'],
-                            'city' => $cartAddress['city'],
-                            'country' => $cartAddress['country'],
-                            'zip' => $cartAddress['postcode'],
-                            'mobilephone' => $cartAddress['phone'],
-                        ) , 'ecommerce-new-order-lead');
-                        wpme_clear_sess();
-                        wpme_simple_log_2('WCUOM-2B-2A-3A-1B-2B Lead Attributes after filter: ' . print_r($attributes, true));
-                        $leadNew = $WPME_API->setLead((int)$leadType, $email, $lead_first, $lead_last, '', true, $attributes);
-                        wpme_simple_log_2('WCUOM-2B-2A-3A-1B-3 New Lead: ' . $leadNew);
-                        $leadNew = (int)$leadNew;
-                        if (function_exists('clearRefferalFromSession')){
-                            clearRefferalFromSession();
-                        }
-                        
-                        if (!is_null($leadNew) && $leadNew > 0)
-                        {
-                            // We have a lead id
-                            $lead_id = $leadNew;
-                            // Set cookie
-                            \WPME\Helper::setUserCookie($lead_id);
-                            wpme_simple_log_2('WCUOM-2B-2A-3A-1B-3A-1 Created NEW LEAD for EMAIL :' . $email . ' : LEAD ID ' . $lead_id);
-                        }
-                        else
-                        {
-                            wpme_simple_log_2('WCUOM-2B-2A-3A-1B-3B-1 Lead not created!');
-                            wpme_simple_log_2('WCUOM-2B-2A-3A-1B-3A-1 response:');
-                            wpme_simple_log_2($WPME_API
-                                ->http
-                                ->response['body']);
-                        }
-                    }
-                    catch(\Exception $e)
-                    {
-                        wpme_simple_log_2('WCUOM-2B-2A-3B-1 Error GETTING or CREATING lead by EMAIL :' . $email . ' : ' . $e->getMessage());
-                    }
-                    // 2 Start and order if lead not null
-                    // 2.1 Set to new order
-                    if ($lead_id !== NULL && $lead_id > 0)
-                    {
-                        wpme_simple_log_2('WCUOM-2B-2A-4-1 Lead exists, creating order. lead id: ' . $lead_id);
-                        $cart = WC()->cart;
-                        $cartContents = \WPME\WooCommerce\VariantCart::convertCartToObject($cart->cart_contents);
-                        $cartOrder = new \WPME\Ecommerce\CartOrder();
-                        $cartOrder->setApi($WPME_API);
-                        $cartOrder->setUser($lead_id);
-                       // $cartOrder->actionNewOrder();
-                        $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
-                        $cartOrder->setShippingAddress($cartAddress2['address_1'], $cartAddress2['address_2'], $cartAddress2['city'], $cartAddress2['country'], $cartAddress2['phone'], $cartAddress2['postcode'], '', $cartAddress2['state']);
-                        $cartOrder->order_number = $order_id;
-                        $cartOrder->currency = $order->get_order_currency();
-                        $cartOrder->setTotal($order->get_total());
-                        $cartOrder->addItemsArray($cartContents);
-                        // Add email and leadType
-                        //ec_lead_type_id = lead type ID
-                        //email_ordered_from = email address making the sale
-                        $leadTYpe = wpme_get_customer_lead_type();
-                        $cartOrder->ec_lead_type_id = $leadTYpe;
-                        $cartOrder
-                            ->changed->ec_lead_type_id = $leadTYpe;
-                        $cartOrder->email_ordered_from = $email;
-                        $cartOrder
-                            ->changed->email_ordered_from = $email;
-                        $cartOrder->tax_amount = $order->get_total_tax();
-                        $cartOrder
-                            ->changed->tax_amount = $order->get_total_tax();
-                        $cartOrder->shipping_amount = $order->get_total_shipping();
-                        $cartOrder
-                            ->changed->shipping_amount = $order->get_total_shipping();
-                        // From email
-                        $cartOrderEmail = \WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
-                        if ($cartOrderEmail !== false)
-                        {
-                            $cartOrder->email_ordered_from = $cartOrderEmail;
-                            $cartOrder
-                                ->changed->email_ordered_from = $cartOrderEmail;
-                        }
-                        wpme_get_order_stream_decipher($order, $cartOrder);
-                        // Continue
-                        //$cartOrder->startNewOrder();
-                        // Set order meta
-                        \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
-                        // Remove session id
-                        unset(WC()
-                            ->session->{WPMKTENGINE_ORDER_KEY});
-                        // Log
-                        wpme_simple_log_2('WCUOM-2B-2A-4-2 Finished ORDER, Genoo ID:' . $cartOrder->id);
-                        wpme_simple_log_2('WCUOM-2B-2A-4-3 Finished ORDER, WooCommerce ID:' . $order_id);
-                    }
-                    else
-                    {
-                        wpme_simple_log_2('WCUOM-2B-2A-5-1 After all attempts no lead created.');
-                        wpme_simple_log_2('WCUOM-2B-2A-5-2 Last API response: ' . print_r($WPME_API->http, true));
-                    }
-                }
-                else
-                {
-                    wpme_simple_log_2('WCUOM-2B-2B-1 No email for order, can\'t continue');
-                }
-            }
-        }
-        , 10, 1);
-
-        /**
-         * Order Processing
-         */
-        /*  add_action('woocommerce_order_status_processing', function($order_id){
-            // Get API
-            global $WPME_API;
-            // Genoo order ID
-            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
-            if(isset($WPME_API) && !empty($id)){
-                $order = new \WC_Order($order_id);
-                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
-                $cartOrder->setApi($WPME_API);
-                // Total price
-                //$cartOrder->total_price = (float)$order->get_total();
-                $cartOrder->total_price = $order->get_total();
-                $cartOrder->tax_amount = $order->get_total_tax();
-                $cartOrder->shipping_amount = $order->get_total_shipping();
-                // Completed?
-                $cartOrder->order_status = 'order';
-                $cartOrder->changed->order_status = 'order';
-                // From email
-                $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
-                if($cartOrderEmail !== FALSE){
-                    $cartOrder->email_ordered_from = $cartOrderEmail;
-                    $cartOrder->changed->email_ordered_from = $cartOrderEmail;
-                }
-                try {
-                    wpme_get_order_stream_decipher($order, $cartOrder);
-                    $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
-                    wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
-                } catch (\Exception $e){
-                    wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
-                    wpme_simple_log_2('FAILED to updated order to PROCESSING :' . $id . ' : WOO ID : ' . $order_id . ' : Because : ' . $e->getMessage());
-                }
-            }
-        }, 10, 1);*/
-        /**
-         * Order On-pending
-         */
+      
 
         add_action('woocommerce_order_status_pending', function ($order_id)
         {
