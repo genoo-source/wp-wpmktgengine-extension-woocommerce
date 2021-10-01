@@ -1035,7 +1035,7 @@ add_action('woocommerce_payment_complete', function ($order_id)
                         }
                        // wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
-                       // $cartOrder->startNewOrder();
+                       $cartOrder->startNewOrder();
                         // Set order meta
                         \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
 
