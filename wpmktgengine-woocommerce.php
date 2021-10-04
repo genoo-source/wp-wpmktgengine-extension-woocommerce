@@ -963,7 +963,7 @@ add_action('woocommerce_payment_complete', function ($order_id)
 
                 if ($getrenewal && $manual == 'false'):
         
-        $get_order = wc_get_order($subscriptions_id->get_parent_id());
+        $get_order = wc_get_order($subscriptions_id->id);
 
           foreach ($get_order->get_items() as $item)
           {
@@ -1042,9 +1042,9 @@ add_action('woocommerce_payment_complete', function ($order_id)
                             try
                             {
                                 //  wpme_get_order_stream_decipher($order, $cartOrder);
-                                $cartOrder->order_status = 'SubRenewal';
+                                $cartOrder->order_status = 'subrenewal';
                                 $cartOrder
-                                    ->changed->order_status = 'SubRenewal';
+                                    ->changed->order_status = 'subrenewal';
                                     $cartOrder->financial_status = 'paid';
                                     
                                 $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
@@ -2558,9 +2558,12 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->total_price = $order->get_total();
             $cartOrder->tax_amount = $order->get_total_tax();
             $cartOrder->shipping_amount = $order->get_total_shipping();
-            $cartOrder->order_status = 'SubRenewal';
-            $cartOrder->changed->order_status = 'SubRenewal';
+            $cartOrder->order_status = 'subrenewal';
+            $cartOrder->changed->order_status = 'subrenewal';
             $cartOrder->financial_status = 'paid';
+             $cartOrder->action = 'subscription Renewal';
+                    $cartOrder
+                        ->changed->action = 'subscription Renewal';
             // Completed?
             // From email
             $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order->id);
