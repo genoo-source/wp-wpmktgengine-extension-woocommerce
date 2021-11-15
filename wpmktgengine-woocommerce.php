@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.5
+    Version: 1.7.6
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -739,6 +739,7 @@ add_action('woocommerce_created_customer', function ($customer_id, $new_customer
                     '',
                     $cartAddress2['state']
                 );
+                $cartOrder->financial_status = 'paid';
                 $cartOrder->order_number = $order_id;
                 $cartOrder->currency = $order->get_order_currency();
                 $cartOrder->setTotal($order->get_total());
@@ -922,6 +923,7 @@ add_action('woocommerce_created_customer', function ($customer_id, $new_customer
                         wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
                         $cartOrder->startNewOrder();
+                         $cartOrder->financial_status = 'paid';
                         // Set order meta
                         \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
                         // Remove session id
@@ -2070,7 +2072,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 //$cartOrder->total_price = (float)$order->get_total();
                 $cartOrder->total_price = $orders->get_total();
                 $cartOrder->tax_amount = $orders->get_total_tax();
-                $cartOrder->actionNewOrder();
+               // $cartOrder->actionNewOrder();
                 $cartOrder->shipping_amount = $orders->get_total_shipping();
                 $cartOrder->setTotal($orders->get_total());
                 $leadTYpe = wpme_get_customer_lead_type();
@@ -2079,7 +2081,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 // Completed?
                 $cartOrder->order_status = 'subpayment';
                 $cartOrder->changed->order_status = 'subpayment';
-                $cartOrder->financial_status = 'paid';
+                //$cartOrder->financial_status = 'paid';
                 // From email
                 $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($subscription->id);
                 if ($cartOrderEmail !== false)
@@ -2148,7 +2150,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
                 try {
-                    wpme_get_order_stream_decipher($order, $cartOrder);
+                   // wpme_get_order_stream_decipher($order, $cartOrder);
                     $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log_2('UPDATED ORDER to COMPLETED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e){
