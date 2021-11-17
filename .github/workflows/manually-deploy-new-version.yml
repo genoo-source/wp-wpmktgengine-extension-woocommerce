@@ -16,4 +16,4 @@ jobs:
           ref: master
       - name: Run Increment Function
         run: |
-          yes "" | sh ./deploy/increment.sh
+          yes "" | bash ./deploy/increment.sh

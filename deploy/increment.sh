@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # Needs to have jq installed, for automatic WordPress tested up to 
 # version detection.
