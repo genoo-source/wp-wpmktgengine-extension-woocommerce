@@ -16,4 +16,6 @@ jobs:
           ref: master
       - name: Run Increment Function
         run: |
-          yes "" | bash ./deploy/increment.sh
+          git config --global user.email "admin@genoo.com"
+          git config --global user.name "GenooBot"
+          yes "" | sh ./deploy/increment.sh
