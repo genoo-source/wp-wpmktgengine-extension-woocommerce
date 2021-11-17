@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+exit;
+
 svn co $SVN_REPOSITORY ./svn
 
 rsync \
