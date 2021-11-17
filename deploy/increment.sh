@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Needs to have jq installed, for automatic WordPress tested up to 
 # version detection.
@@ -16,6 +16,7 @@ PLUGIN_WORDPRESS_CURRENT_VERSION=$(awk '/Tested up to/{print $NF}' readme.txt)
 read -p "Would you like to update plugin from $PLUGIN_CURRENT_VERSION to $PLUGIN_NEXT_VERSION ?" response
 if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   echo "Updating to a new version..."
+  ls -lah
   # New version update
   # Replace versions with new version
   # - In main file

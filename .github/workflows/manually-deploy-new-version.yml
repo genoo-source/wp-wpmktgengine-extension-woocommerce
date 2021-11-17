@@ -18,4 +18,4 @@ jobs:
         run: |
           git config --global user.email "admin@genoo.com"
           git config --global user.name "GenooBot"
-          yes "" | ./deploy/increment.sh
+          yes "" | sh ./deploy/increment.sh
