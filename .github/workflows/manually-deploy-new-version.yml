@@ -11,7 +11,7 @@ jobs:
       SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         with:
           ref: master
       - name: Run Increment Function
