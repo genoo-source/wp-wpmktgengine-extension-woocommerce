@@ -23,7 +23,6 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   # - In readme file
   sed -i "" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" ./readme.txt
   sed -i "" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" ./readme.txt
-  exit;
   # New tag and push
   git commit -am "Release: $PLUGIN_NEXT_VERSION"
   git tag -a $PLUGIN_NEXT_VERSION -m "Release: $PLUGIN_NEXT_VERSION"
