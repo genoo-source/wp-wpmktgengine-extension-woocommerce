@@ -14,7 +14,7 @@ PLUGIN_WORDPRESS_NEXT_VERSION=$(curl -s "https://api.wordpress.org/core/version-
 PLUGIN_WORDPRESS_CURRENT_VERSION=$(awk '/Tested up to/{print $NF}' readme.txt)
 
 read -p "Would you like to update plugin from $PLUGIN_CURRENT_VERSION to $PLUGIN_NEXT_VERSION ?" response
-if [[ $response =~ ^(yes|y| ) ]] || [[ -z $response ]]; then
+if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   echo "Updating to a new version..."
   # New version update
   # Replace versions with new version
