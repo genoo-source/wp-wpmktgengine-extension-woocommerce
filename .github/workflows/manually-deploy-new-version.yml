@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
 jobs:
   deploy:
-    name: Deploy to WordPress.org Plugin Repository
-    runs-on: ubuntu-latest
+    name: Increment Version number, and Push Changes
+    runs-on: macos-11
     env:
       SVN_REPOSITORY: https://plugins.svn.wordpress.org/wpmktgengine-extension-woocommerce/
       SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
