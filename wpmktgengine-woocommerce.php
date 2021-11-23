@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.13
+    Version: 1.7.14
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -949,9 +949,11 @@ add_action('woocommerce_payment_complete', function ($order_id)
       
         global $WPME_API;
         // Genoo order ID
+       if( function_exists('wcs_get_subscriptions_for_order') ) :
         $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
                 'order_type' => 'any'
             ));
+          endif;
             
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
        
@@ -1073,9 +1075,11 @@ add_action('woocommerce_payment_complete', function ($order_id)
             // Get API
             global $WPME_API;
             // Genoo order ID
+             if( function_exists('wcs_get_subscriptions_for_order') ) :
             $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
                 'order_type' => 'any'
             ));
+            endif;
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
             wpme_simple_log_2('WOSF-2 Payment failed for order: ' . $order_id);
             wpme_simple_log_2('WOSF-3 Woocommerce order: ' . $id);
@@ -1835,11 +1839,15 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
      */
 
     $getrenewal = get_post_meta($order->id, '_subscription_renewal', true);
+    
+     if( function_exists('wcs_get_subscriptions_for_order') ) :
 
     $subscriptions_ids = wcs_get_subscriptions_for_order($order->id, array(
         'order_type' => 'any'
     ));
 
+    endif;
+    
     $orderStatus = $givenOrderStatus ? $givenOrderStatus : $order->get_status();
 
    
@@ -2120,9 +2128,11 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             // Get API
             global $WPME_API;
             // Genoo order ID
+             if( function_exists('wcs_get_subscriptions_for_order') ) :
               $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
                 'order_type' => 'any'
             ));
+            endif;
             if(empty($subscriptions_ids)):
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
             wpme_simple_log_2('Woocommerce order completed. Genoo order id: ' . $id);
