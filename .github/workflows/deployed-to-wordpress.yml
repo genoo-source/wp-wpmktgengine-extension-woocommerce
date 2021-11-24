@@ -4,6 +4,7 @@ on:
     tags:        
       - '*'
   workflow_call:
+
 jobs:
   linted:
     name: PHP Syntax Error Free
