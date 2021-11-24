@@ -30,3 +30,5 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   # All done, yay
   echo "Updated new version"
 fi
+
+exit 0
