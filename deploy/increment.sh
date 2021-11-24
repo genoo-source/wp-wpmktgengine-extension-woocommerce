@@ -24,9 +24,14 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   sed -i "" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
   sed -i "" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
   # New tag and push
-  git commit -am "Release: $PLUGIN_NEXT_VERSION"
-  git tag -a $PLUGIN_NEXT_VERSION -m "Release: $PLUGIN_NEXT_VERSION"
-  git push --tags
+  if ["$GITHUB_ACTIONS" = true ]  ; then
+    # Github Action, don't do anything
+  else
+    # Local run, push changes
+    git commit -am "Release: $PLUGIN_NEXT_VERSION"
+    git tag -a $PLUGIN_NEXT_VERSION -m "Release: $PLUGIN_NEXT_VERSION"
+    git push origin master --tags
+  fi
   # All done, yay
   echo "Updated new version"
   exit 0;

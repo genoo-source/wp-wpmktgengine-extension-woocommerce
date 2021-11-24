@@ -19,6 +19,14 @@ jobs:
           git config --global user.email "admin@genoo.com"
           git config --global user.name "GenooBot"
           yes "" | ./deploy/increment.sh
+      - name: Push changes to the repository
+        run: |-
+          git config user.name "rozesmej.me worker"
+          git config user.email "actions@users.noreply.github.com"
+          git add .
+          timestamp=$(date -u -Is)
+          git commit -am "Adding new memes on ${timestamp}" || exit 0
+          git push
   trigger-push-to-wp:
     needs: bump-version
     uses: genoo-source/wp-wpmktgengine-extension-woocommerce/.github/workflows/deployed-to-wordpress.yml@master
