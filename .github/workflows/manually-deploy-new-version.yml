@@ -2,7 +2,7 @@ name: Manually Deploy New Version
 on:
   workflow_dispatch:
 jobs:
-  deploy:
+  bump-version:
     name: Increment Version number, and Push Changes
     runs-on: macos-11
     env:
@@ -20,4 +20,5 @@ jobs:
           git config --global user.name "GenooBot"
           yes "" | ./deploy/increment.sh
   trigger-push-to-wp:
+    needs: bump-version
     uses: genoo-source/wp-wpmktgengine-extension-woocommerce/.github/workflows/deployed-to-wordpress.yml@master
