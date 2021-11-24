@@ -30,7 +30,7 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   fi
 
   # New tag and push
-  if ["$GITHUB_ACTIONS" = true ]  ; then
+  if [ "$GITHUB_ACTIONS" = true ]; then
     # Github Action, don't do anything
   else
     # Local run, push changes
@@ -38,6 +38,7 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
     git tag -a $PLUGIN_NEXT_VERSION -m "Release: $PLUGIN_NEXT_VERSION"
     git push origin master --tags
   fi
+
   # All done, yay
   echo "Updated new version"
   exit 0;
