@@ -19,3 +19,5 @@ jobs:
           git config --global user.email "admin@genoo.com"
           git config --global user.name "GenooBot"
           yes "" | ./deploy/increment.sh
+  trigger-push-to-wp:
+    uses: genoo-source/wp-wpmktgengine-extension-woocommerce/.github/workflows/deployed-to-wordpress.yml@master
