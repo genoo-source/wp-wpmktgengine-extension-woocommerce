@@ -29,7 +29,7 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   git push origin master --tags
   # All done, yay
   echo "Updated new version"
-  exit 0
+  return;
 fi
 
 exit 0
