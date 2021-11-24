@@ -32,6 +32,7 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   # New tag and push
   if [ "$GITHUB_ACTIONS" = true ]; then
     # Github Action, don't do anything
+    echo "Running in Github Actions, abort commit"
   else
     # Local run, push changes
     git commit -am "Release: $PLUGIN_NEXT_VERSION"
