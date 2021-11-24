@@ -25,7 +25,7 @@ jobs:
   trigger-push-to-wp:
     needs: bump-version
     uses: genoo-source/wp-wpmktgengine-extension-woocommerce/.github/workflows/deployed-to-wordpress.yml@master
-    # secrets:
-    #   SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-    #   SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-    #   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    secrets:
+      SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+      SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
