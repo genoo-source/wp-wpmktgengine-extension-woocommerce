@@ -26,7 +26,7 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   # New tag and push
   git commit -am "Release: $PLUGIN_NEXT_VERSION"
   git tag -a $PLUGIN_NEXT_VERSION -m "Release: $PLUGIN_NEXT_VERSION"
-  git push origin master --tags
+  git push --tags
   # All done, yay
   echo "Updated new version"
   exit 0;
