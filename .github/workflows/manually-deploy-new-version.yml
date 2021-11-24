@@ -4,7 +4,7 @@ on:
 jobs:
   bump-version:
     name: Increment Version number, and Push Changes
-    runs-on: macos-11
+    runs-on: ubuntu-latest
     env:
       SVN_REPOSITORY: https://plugins.svn.wordpress.org/wpmktgengine-extension-woocommerce/
       SVN_USERNAME: ${{ secrets.SVN_USERNAME }}

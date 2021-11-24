@@ -16,13 +16,19 @@ PLUGIN_WORDPRESS_CURRENT_VERSION=$(awk '/Tested up to/{print $NF}' readme.txt)
 read -p "Would you like to update plugin from $PLUGIN_CURRENT_VERSION to $PLUGIN_NEXT_VERSION ?" response
 if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   echo "Updating to a new version..."
-  # New version update
-  # Replace versions with new version
-  # - In main file
-  sed -i "" "s/${PLUGIN_CURRENT_VERSION}/${PLUGIN_NEXT_VERSION}/g" wpmktgengine-woocommerce.php
-  # - In readme file
-  sed -i "" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
-  sed -i "" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
+  # Check OS type, as macOS (Darwin) uses different version of `sed` command
+  if [ "$(uname)" == "Darwin" ]; then
+    # macOs
+    sed -i "" "s/${PLUGIN_CURRENT_VERSION}/${PLUGIN_NEXT_VERSION}/g" wpmktgengine-woocommerce.php
+    sed -i "" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
+    sed -i "" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
+  else
+    # Any other
+    sed -i"" "s/${PLUGIN_CURRENT_VERSION}/${PLUGIN_NEXT_VERSION}/g" wpmktgengine-woocommerce.php
+    sed -i"" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
+    sed -i"" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
+  fi
+
   # New tag and push
   if ["$GITHUB_ACTIONS" = true ]  ; then
     # Github Action, don't do anything
