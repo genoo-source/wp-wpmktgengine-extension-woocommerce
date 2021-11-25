@@ -6,6 +6,9 @@
 # `brew install jq`
 #
 
+# File:
+# wpmktgengine-woocommerce.php
+
 # Get needed versions from a
 PLUGIN_CURRENT_VERSION=$(awk '/   Version/{print $NF}' wpmktgengine-woocommerce.php)
 PLUGIN_NEXT_VERSION=$(echo $PLUGIN_CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
