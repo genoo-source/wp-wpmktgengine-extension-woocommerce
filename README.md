@@ -17,7 +17,7 @@ This will run the script, ask you if you'd like to upgrade to given version, onc
 
 #### Using Github Interface
 
-You can deploy a new version using a GitHub interface too, all you need to do is, go to `Repository -> Actions -> Select: "Manually Deploy New Version" -> Click: "Run Workflow" -> Click Green Button: "Run Workflow". This will trigger an update script through the command line, and after that it will trigger the original deployment workflow.
+You can deploy a new version using a GitHub interface too, all you need to do is, go to `Repository -> Actions -> Select: "Manually Deploy New Version" -> Click: "Run Workflow" -> Click Green Button: "Run Workflow"`. This will trigger an update script through the command line, and after that it will trigger the original deployment workflow.
 
 ### Tests
 
