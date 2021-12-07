@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.22
+    Version: 1.7.23
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -2121,6 +2121,40 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
 
     }
     , 10, 1);
+       add_action('woocommerce_order_status_processing', function($order_id){
+            // Get API
+            global $WPME_API;
+            // Genoo order ID
+            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, TRUE);
+            if(isset($WPME_API) && !empty($id)){
+                $order = new \WC_Order($order_id);
+                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
+                $cartOrder->setApi($WPME_API);
+                // Total price
+                //$cartOrder->total_price = (float)$order->get_total();
+                $cartOrder->total_price = $order->get_total();
+                $cartOrder->tax_amount = $order->get_total_tax();
+                $cartOrder->shipping_amount = $order->get_total_shipping();
+                // Completed?
+                $cartOrder->order_status = 'order';
+                $cartOrder->changed->order_status = 'order';
+               // $cartOrder->financial_status = 'paid';
+                // From email
+                $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
+                if($cartOrderEmail !== FALSE){
+                    $cartOrder->email_ordered_from = $cartOrderEmail;
+                    $cartOrder->changed->email_ordered_from = $cartOrderEmail;
+                }
+                try {
+                   // wpme_get_order_stream_decipher($order, $cartOrder);
+                    $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                    wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
+                } catch (\Exception $e){
+                    wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
+                    wpme_simple_log_2('FAILED to updated order to PROCESSING :' . $id . ' : WOO ID : ' . $order_id . ' : Because : ' . $e->getMessage());
+                }
+            }
+        }, 10, 1);
      /**
          * Order Completed
          */
