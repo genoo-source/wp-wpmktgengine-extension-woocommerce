@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.23
+    Version: 1.7.24
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -1878,6 +1878,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                // Completed?
                $cartOrder->order_status = 'order';
                $cartOrder->changed->order_status = 'order';
+               $cartOrder->financial_status = 'paid';
                // From email
                $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
                if ($cartOrderEmail !== false) {
