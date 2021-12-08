@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.24
+    Version: 1.7.25
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -630,7 +630,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                     '',
                     $cartAddress2['state']
                 );
-                $cartOrder->financial_status = 'paid';
+               // $cartOrder->financial_status = 'paid';
                 $cartOrder->order_number = $order_id;
                 $cartOrder->currency = $order->get_order_currency();
                 $cartOrder->setTotal($order->get_total());
@@ -814,7 +814,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                         wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
                         $cartOrder->startNewOrder();
-                        $cartOrder->financial_status = 'paid';
+                         //$cartOrder->financial_status = 'paid';
                         // Set order meta
                         \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
                         // Remove session id
