@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.26
+    Version: 1.7.27
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -43,6 +43,7 @@ define('WPMKTENGINE_ECOMMERCE_LOG_FOLDER', __DIR__);
 /**
  * Give us the API
  */
+if(!function_exists(wpme_on_wpme_api_set)){
 function wpme_on_wpme_api_set()
 {
     global $WPME_API;
@@ -61,7 +62,7 @@ function wpme_on_wpme_api_set()
     }
     $WPME_API = $api;
 }
-
+}
 /**
  * On activation
  */
