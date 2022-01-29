@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.28
+    Version: 1.7.30
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -201,6 +201,7 @@ register_activation_hook(__FILE__, function () {
                         'name' => 'order refund partial',
                         'description' => ''
                     ) ,
+                  
                     array(
                         'name' => 'upsell purchased',
                         'description' => 'Upsell Purchased'
@@ -222,6 +223,14 @@ register_activation_hook(__FILE__, function () {
                         'description' => ''
                     ) ,
                     array(
+                        'name' => 'subscription renewal',
+                        'description' => ''
+                    ) ,
+                    array(
+                        'name' => 'subscription reactivated',
+                        'description' => ''
+                     ),
+                    array(
                         'name' => 'subscription payment declined',
                         'description' => ''
                     ) ,
@@ -230,16 +239,36 @@ register_activation_hook(__FILE__, function () {
                         'description' => ''
                     ) ,
                     array(
-                        'name' => 'subscription cancelled',
-                        'description' => ''
-                    ) ,
-                    array(
                         'name' => 'subscription expired',
                         'description' => ''
                     ) ,
+                    array(
+                        'name' => 'sub renewal failed',
+                        'description' => ''
+                    ) ,
+                    array(
+                        'name' => 'sub payment failed',
+                        'description' => ''
+                    ) ,
+                    array(
+                        'name' => 'subscription on hold',
+                        'description' => ''
+                     ),
+                     array(
+                        'name' => 'cancelled order',
+                        'description' => ''
+                     ),
+                     array(
+                        'name' => 'subscription cancelled',
+                        'description' => ''
+                     ),
+                     array(
+                        'name' => 'Subscription Pending Cancellation',
+                        'description' => ''
+                     ),
                 ));
             } catch (\Exception $e) {
-                // Decide later
+                // Decide later Sub Renewal Failed
             }
             // Activate and save leadType, import products
             if ($activeLeadType == false || is_null($activeLeadType)) {
@@ -448,6 +477,92 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                 //
             }
         }, 10, 3);
+
+        add_action('woocommerce_order_status_failed', function ($order_id, $that) {
+            wpme_simple_log_2('WOSF-1 Payment failed.');
+            // Get API
+            global $WPME_API;
+            // Genoo order ID
+            if (function_exists('wcs_get_subscriptions_for_order')) :
+            $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
+                'order_type' => 'any'
+            ));
+            endif;
+            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+            $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
+            if (isset($WPME_API) && !empty($id)) {
+                $order = new \WC_Order($order_id);
+                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
+                $cartOrder->setApi($WPME_API);
+                // Total price
+                $cartOrder->total_price = $order->get_total();
+                $cartOrder->tax_amount = $order->get_total_tax();
+                $cartOrder->shipping_amount = $order->get_total_shipping();
+                // Completed?
+              
+                    $cartOrder->financial_status = 'declined';
+                    $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+                    $subscription_product_name_values = implode(","." ", $subscription_product_name);
+
+                    $genoo_lead_id = get_wpme_order_lead_id($id);
+                    if(!empty($subscriptions_ids) && !$getrenewal) :
+
+                        $cartOrder->order_status = 'sub payment failed';
+                        $cartOrder
+                            ->changed->order_status = 'sub payment failed';
+                  
+                 
+                    wpme_fire_activity_stream(
+                        $genoo_lead_id,
+                        'sub payment failed',
+                        $subscription_product_name_values, // Title  $order->parent_id
+                        $subscription_product_name_values, // Content
+                    ' '
+                    // Permalink
+                    );
+                elseif($getrenewal):
+                    $cartOrder->order_status = 'sub renewal failed';
+                    $cartOrder
+                        ->changed->order_status = 'sub renewal failed';
+                    wpme_fire_activity_stream(
+                        $genoo_lead_id,
+                        'sub renewal failed',
+                        $subscription_product_name_values, // Title  $order->parent_id
+                        $subscription_product_name_values, // Content
+                    ' '
+                    // Permalink
+                    );
+                else:
+                    $cartOrder->order_status = 'payment failed';
+                    $cartOrder
+                        ->changed->order_status = 'payment failed';
+                    wpme_fire_activity_stream(
+                        $genoo_lead_id,
+                        'order payment failed',
+                        $subscription_product_name_values, // Title  $order->parent_id
+                        $subscription_product_name_values, // Content
+                    ' '
+                    // Permalink
+                    );
+                endif;
+
+                // From email
+                $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order_id);
+                if ($cartOrderEmail !== false) {
+                    $cartOrder->email_ordered_from = $cartOrderEmail;
+                    $cartOrder
+                        ->changed->email_ordered_from = $cartOrderEmail;
+                }
+                      
+               $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                wpme_simple_log_2('WOSF-3A-2 Finished updating order.');
+                wpme_simple_log_2('WOSF-3A-3 Api response:');
+                wpme_simple_log_2($WPME_API
+                    ->http
+                    ->response['body']);
+            }
+            // Failed!
+        }, 10, 2); 
 
         /**
          * Genoo Leads, recompile to add ecommerce
@@ -818,7 +933,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                         }
                         wpme_get_order_stream_decipher($order, $cartOrder);
                         // Continue
-                        $cartOrder->startNewOrder();
+                       $cartOrder->startNewOrder();
                         // Set order meta
                         \update_post_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
                         // Remove session id
@@ -942,7 +1057,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                                     ->changed->order_status = 'subrenewal';
                     $cartOrder->financial_status = 'paid';
                                     
-                    $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                    $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e) {
                     wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
@@ -957,51 +1072,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
         /**
          * Order Failed
          */
-        add_action('woocommerce_order_status_failed', function ($order_id, $that) {
-            wpme_simple_log_2('WOSF-1 Payment failed.');
-            // Get API
-            global $WPME_API;
-            // Genoo order ID
-            if (function_exists('wcs_get_subscriptions_for_order')) :
-            $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
-                'order_type' => 'any'
-            ));
-            endif;
-            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-            wpme_simple_log_2('WOSF-2 Payment failed for order: ' . $order_id);
-            wpme_simple_log_2('WOSF-3 Woocommerce order: ' . $id);
-            if (isset($WPME_API) && !empty($id)) {
-                wpme_simple_log_2('WOSF-3A-1 Order found, changing status.');
-                $order_genoo_id = $id;
-                $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
-                $cartOrder->setApi($WPME_API);
-                $order = new \WC_Order($order_id);
-                // Status?
-                $cartOrder->total_price = $order->get_total();
-                $cartOrder->financial_status = 'declined';
-                $cartOrder
-                    ->changed->financial_status = 'declined';
-                if (empty($subscriptions_ids)):
-                    $cartOrder->action = 'order payment declined';
-                $cartOrder
-                        ->changed->action = 'order payment declined'; else:
-                    $cartOrder->action = 'subscription order payment declined';
-                $cartOrder
-                        ->changed->action = 'subsctiption order payment declined';
-                endif;
-                // Completed?
-                wpme_get_order_stream_decipher($order, $cartOrder);
-                // Update
-                $cartOrder->updateOrder(true);
-                wpme_simple_log_2('WOSF-3A-2 Finished updating order.');
-                wpme_simple_log_2('WOSF-3A-3 Api response:');
-                wpme_simple_log_2($WPME_API
-                    ->http
-                    ->response['body']);
-            }
-            // Failed!
-        }, 10, 2);
-
+   
       
 
         add_action('woocommerce_order_status_pending', function ($order_id) {
@@ -1030,7 +1101,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                 }
                 try {
                     wpme_get_order_stream_decipher($order, $cartOrder);
-                    $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                     $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e) {
                     wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
@@ -1057,12 +1128,25 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                 $cartOrder->order_status = 'refunded';
                 $cartOrder
                     ->changed->order_status = 'refunded';
+              
+                $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+                $subscription_product_name_values = implode(","." ", $subscription_product_name);
+                $genoo_lead_id =  get_wpme_order_lead_id($id);
+                        
+                        wpme_fire_activity_stream(
+                                $genoo_lead_id,
+                                'order refund full',
+                                $subscription_product_name_values, // Title  $order->parent_id
+                                $subscription_product_name_values, // Content
+                            ' '
+                            // Permalink
+                            
+                        );
                 // Completed?
                 $cartOrder->refund_date = \WPME\Ecommerce\Utils::getDateTime();
                 $cartOrder->refund_amount = $order->get_total_refunded();
                 try {
-                    wpme_get_order_stream_decipher($order, $cartOrder);
-                    $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                     wpme_simple_log_2('UPDATED ORDER to REFUNDED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                 } catch (\Exception $e) {
                     wpme_simple_log_2('Refunding ORDER, Genoo ID:' . $cartOrder->id);
@@ -1143,8 +1227,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
             if (isset($WPME_API) && !empty($id)) {
-                $refund = new \WC_Order_Refund($refund_id);
-                $order = new \WC_Order($order_id);
+               
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 // @@ PART REFUND
@@ -1154,41 +1237,23 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
                 $cartOrder->updateOrder(true);
                 // Get lead
                 $genoo_lead_id = get_wpme_order_lead_id($id);
+               
+                $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+                $subscription_product_name_values = implode(","." ", $subscription_product_name);
                 wpme_fire_activity_stream(
-                    $genoo_lead_id,
-                    'order refund partial',
-                    $refund->get_amount(),
-                    '', // Contenat
-                ''
-                // Permalink
+                        $genoo_lead_id,
+                        'order refund partial',
+                        $subscription_product_name_values, // Title  $order->parent_id
+                        $subscription_product_name_values, // Content
+                    ' '
+                    // Permalink
+                    
                 );
                 wpme_simple_log_2('UPDATING ORDER PARTIALLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
             }
         }, 10, 2);
 
-        /**
-         * Full refund
-         */
-        add_action('woocommerce_order_fully_refunded', function ($order_id, $refund_id) {
-            // Get API
-            global $WPME_API;
-            // Genoo order ID
-            $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-            // Get API
-            global $WPME_API;
-            if (isset($WPME_API) && !empty($id)) {
-                $refund = new \WC_Order_Refund($refund_id);
-                $order = new \WC_Order($order_id);
-                $cartOrder = new \WPME\Ecommerce\CartOrder($id);
-                $cartOrder->setApi($WPME_API);
-                $cartOrder->actionRefundFull($refund->get_refund_reason());
-                wpme_get_order_stream_decipher($order, $cartOrder);
-                $cartOrder->updateOrder(true);
-                wpme_simple_log_2('UPDATING ORDER FULLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
-            }
-        }, 10, 2);
-
-        /**
+       /**
          * Order cancelled
          */
         add_action('woocommerce_order_status_cancelled', function ($order_id) {
@@ -1196,26 +1261,44 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
             global $WPME_API;
             // Genoo order ID
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-            if (isset($WPME_API) && !empty($id)) {
-                try {
-                    $WPME_API->updateCart($id, array(
-                        'order_status' => 'Order Cancelled',
-                        'action' => 'cancelled order',
+         
+             if (isset($WPME_API) && !empty($id)) {
+                 $order = new \WC_Order($order_id);
+                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
+                 $cartOrder->setApi($WPME_API);
+                 // Total price
+                 $cartOrder->financial_status = '';
+                 // Refunded?
+                 $cartOrder->order_status = 'Order Cancelled';
+                 $cartOrder
+                     ->changed->order_status = 'Order Cancelled';
+                 // Completed?
+                 $cartOrder->refund_date = \WPME\Ecommerce\Utils::getDateTime();
+                 $cartOrder->refund_amount = $order->get_total_refunded();
+                 try {
+                     wpme_get_order_stream_decipher($order, $cartOrder);
+                    $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                    $genoo_lead_id = get_wpme_order_lead_id($id);
+                    $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+                    $subscription_product_name_values = implode(","." ", $subscription_product_name);
+                    
+                        wpme_fire_activity_stream(
+                            $genoo_lead_id,
+                            'cancelled order',
+                            $subscription_product_name_values, // Title  $order->parent_id
+                            $subscription_product_name_values, // Content
+                        ' '
+                        // Permalink
+                        
+                    );
 
-                    ));
-                } catch (\Excerption $e) {
-                }
-                $genoo_lead_id = get_wpme_order_lead_id($id);
-                wpme_fire_activity_stream(
-                    $genoo_lead_id,
-                    'cancelled order',
-                    '#' . $order_id,
-                    '', // Contenat
-                ''
-                // Permalink
-                );
-                wpme_simple_log_2('UPDATING ORDER CANCELLED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
-            }
+                    
+                     wpme_simple_log_2('UPDATED ORDER to REFUNDED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
+                 } catch (\Exception $e) {
+                     wpme_simple_log_2('Refunding ORDER, Genoo ID:' . $cartOrder->id);
+                     wpme_simple_log_2('FAILED to update order to REFUNDED :' . $id . ' : WOO ID : ' . $order_id . ' : Because : ' . $e->getMessage());
+                 }
+             }
         }, 10, 1);
 
         // Not used yet
@@ -1615,38 +1698,12 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
     
     $orderStatus = $givenOrderStatus ? $givenOrderStatus : $order->get_status();
 
-   
-    
     /**
      * 1. Go through normal status
      * payment declined(renewal failed and payment failed)
      */
     switch ($orderStatus) {
-        case 'failed':
-            $cartOrder->order_status = 'Order';
-            if (empty($subscriptions_ids)):
-                $cartOrder
-                    ->changed->order_status = 'order payment declined';
-            else:
-                $cartOrder
-                    ->changed->order_status = 'subscription order payment declined';
-            endif;
-            $cartOrder->financial_status = 'declined';
-            $cartOrder
-                ->changed->financial_status = 'declined';
-            $cartOrder->action = 'order payment declined';
-            if (!empty($subscriptions_ids) && $getrenewal):
-                $cartOrder
-                    ->changed->action = 'sub renewal failed';
-            elseif (!empty($subscriptions_ids) && !$getrenewal):
-                $cartOrder
-                    ->changed->action = 'sub payment failed';
-            else:
-                $cartOrder
-                    ->changed->action = 'order payment declined';
-            endif;
-            break;
-        case 'processing':
+         case 'processing':
             $cartOrder->order_status = 'New Order';
             if (empty($subscriptions_ids) && !$getrenewal):
                 $cartOrder
@@ -1662,13 +1719,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder
                 ->changed->action = 'new order';
             break;
-        /*case 'woocommerce_payment_complete':
-            $cartOrder->order_status = 'New Order';
-            $cartOrder
-                ->changed->order_status = 'New Order';
-            $cartOrder->financial_status = 'paid';
-            $cartOrder
-                ->changed->financial_status = 'paid';*/
+
 
         case 'completed':
             $cartOrder->order_status = 'Completed Order';
@@ -1681,7 +1732,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder
                 ->changed->action = 'completed order';
             break;
-        case 'cancelled':
+       case 'cancelled':
             $cartOrder->order_status = 'Order Cancelled';
             $cartOrder
                 ->changed->order_status = 'Order Cancelled';
@@ -1691,50 +1742,13 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->action = 'cancelled order';
             $cartOrder
                 ->changed->action = 'cancelled order';
-            break;
-        case 'refunded':
-            $cartOrder->order_status = 'Order Refund Full';
-            $cartOrder
-                ->changed->order_status = 'Order Refund Full';
-            $cartOrder->financial_status = 'Refunded';
-            $cartOrder
-                ->changed->financial_status = 'Refunded';
-            $cartOrder->action = 'order refund full';
-            $cartOrder
-                ->changed->action = 'order refund full';
-            break;
+            break; 
+     
         case 'partially_refunded':
             // Search for: @@ PART REFUND
             break;
-            /**
-             * The special case of Subsription statuses
-             * woocommerce_subscription_payment_complete(subscription payment)
-             * woocommerce_subscription_renewal_payment_complete(renewal payment)
-             */
-            /*case 'woocommerce_subscription_payment_complete':
-            $cartOrder->order_status = 'Subscription Order';
-            $cartOrder->changed->order_status = 'Subscription Order';
-            $cartOrder->financial_status = 'paid';
-            $cartOrder->changed->financial_status = 'paid';
-            $cartOrder->action = 'subscription payment';
-            $cartOrder->changed->action = 'subscription payment';
-            break;
-            case 'woocommerce_subscription_renewal_payment_complete':
-            $cartOrder->order_status = 'Subscription Payment';
-            $cartOrder->changed->order_status = 'Subscription Payment';
-            $cartOrder->financial_status = 'paid';
-            $cartOrder->changed->financial_status = 'paid';
-            $cartOrder->action = 'sub renewal';
-            $cartOrder->changed->action = 'sub renewal';
-            break;*/
-        case 'woocommerce_subscription_payment_failed':
-            /*  $cartOrder->order_status = 'Subscription Payment';
-             $cartOrder->changed->order_status = 'Subscription Payment';*/
-            $cartOrder->financial_status = 'Failed';
-            $cartOrder->changed->financial_status = 'Failed';
-            $cartOrder->action = 'subscription payment declined';
-            $cartOrder->changed->action = 'subscription payment declined';
-            break;
+          
+    
         }
 }
 
@@ -1761,7 +1775,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
         return $genoo_id;
     }
 
-    /**
+  /**
      * Get Lead ID from order
      */
     function get_wpme_order_lead_id($genoo_id)
@@ -1791,12 +1805,12 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
         if (!$subscription) {
             return;
         }
-        $return = '#' . $subscription_id . ' - ';
+        
         // Iterating through subscription items
         foreach ($subscription->get_items() as $item_id => $product_subscription) {
             // Get the name
-            $return .= $product_subscription->get_name();
-            $return .= ', ';
+            $return[] = $product_subscription->get_name();
+         
         }
         return $return;
     }
@@ -1807,9 +1821,11 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
          // Genoo order ID
          $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
          $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
+         if (function_exists('wcs_get_subscriptions_for_order')) :
          $subscriptions_ids = wcs_get_subscriptions_for_order($order_id, array(
         'order_type' => 'any'
-    ));
+            ));
+        endif;
     
          if (!$getrenewal):
            if (isset($WPME_API) && !empty($id)) {
@@ -1836,7 +1852,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                    $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                }
                try {
-                   $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                    wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
                } catch (\Exception $e) {
                    wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
@@ -1861,11 +1877,13 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
         $is_renewal = get_post_meta($order->id, '_subscription_renewal_order_ids_cache', true);
         if (empty($is_renewal)):
             //subscription started
+            $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+            $subscription_product_name_values = implode(","." ", $subscription_product_name);
             wpme_fire_activity_stream(
                 $genoo_lead_id,
                 'subscription started',
-                get_wpme_subscription_activity_name($subscription->id), // Title  $order->parent_id
-            get_wpme_subscription_activity_name($subscription->id), // Content
+                $subscription_product_name_values, // Title  $order->parent_id
+                $subscription_product_name_values, // Content
             ' '
             // Permalink
             );
@@ -1876,7 +1894,6 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartAddress2 = $order->get_address('shipping');
             $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
             $cartOrder->setApi($WPME_API);
-            //  $cartOrder->actionNewOrder();
             $cartOrder->total_price = $order->get_total();
             $cartOrder->setBillingAddress(
                 $cartAddress['address_1'],
@@ -1902,14 +1919,11 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->currency = $order->get_order_currency();
             $cartOrder->setTotal($order->get_total());
             // Add email and leadType
-            //ec_lead_type_id = lead type ID
-            //email_ordered_from = email address making the sale
             $leadTYpe = wpme_get_customer_lead_type();
             $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
             $cartOrder->changed->ec_lead_type_id = $leadTYpe;
             $cartOrder->email_ordered_from = $email;
             $cartOrder->changed->email_ordered_from = $email;
-                  
             $cartOrder->tax_amount = $order->get_total_tax();
             $cartOrder->changed->tax_amount = $order->get_total_tax();
             $cartOrder->shipping_amount = $order->get_total_shipping();
@@ -1919,8 +1933,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             // Completed?
             $cartOrder->order_status = 'subpayment';
             $cartOrder->changed->order_status = 'subpayment';
-            //$cartOrder->financial_status = 'paid';
-            // From email
+             // From email
             $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($subscription->id);
             if ($cartOrderEmail !== false) {
                 $cartOrder->email_ordered_from = $cartOrderEmail;
@@ -1934,10 +1947,9 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 }
             }
             try {
-                //   wpme_get_order_stream_decipher($order, $cartOrder);
                 $cartOrder->order_status = 'subpayment';
                 $cartOrder->changed->order_status = 'subpayment';
-                $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                 wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $subscription->id);
             } catch (\Exception $e) {
                 wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
@@ -2124,8 +2136,6 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                         $cartOrder->setTotal($order->get_total());
                         $cartOrder->addItemsArray($cartContents);
                         // Add email and leadType
-                        //ec_lead_type_id = lead type ID
-                        //email_ordered_from = email address making the sale
                         $leadTYpe = wpme_get_customer_lead_type();
                         $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
                         $cartOrder->changed->ec_lead_type_id = $leadTYpe;
@@ -2186,11 +2196,14 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
 
         wpme_simple_log_2('WSC-01-B - Subscription activated - Lead ID: ' . $genoo_lead_id);
         //subscription reactivated
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
+
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'subscription reactivated',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-            get_wpme_subscription_activity_name($subscription->id), // Content
+          $subscription_product_name_values, // Title
+          $subscription_product_name_values, // Content
             ' '
             // Permalink
         );
@@ -2213,11 +2226,13 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             return;
         }
         wpme_simple_log_2('WSC-01-B - Subscription activated - Lead ID: ' . $genoo_lead_id);
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'subscription reactivated',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-        get_wpme_subscription_activity_name($subscription->id), // Content
+         $subscription_product_name_values, // Title
+         $subscription_product_name_values, // Content
         ' '
         // Permalink
         );
@@ -2247,13 +2262,14 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             return;
         }
         wpme_simple_log_2('WSC-01-B - Subscription on - hold - Lead ID: ' . $genoo_lead_id);
-
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
         if (in_array('administrator', $user_roles)):
             wpme_fire_activity_stream(
                 $genoo_lead_id,
                 'subscription on hold',
-                get_wpme_subscription_activity_name($subscription->id), // Title
-            get_wpme_subscription_activity_name($subscription->id), // Content
+                $subscription_product_name_values, // Title
+                $subscription_product_name_values, // Content
             ' '
             // Permalink
             );
@@ -2279,11 +2295,14 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
         }
         wpme_simple_log_2('WSC-01-B - Subscription on - hold - Lead ID: ' . $genoo_lead_id);
 
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
+
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'subscription on hold',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-        get_wpme_subscription_activity_name($subscription->id), // Content
+            $subscription_product_name_values, // Title
+            $subscription_product_name_values, // Content
         ' '
         // Permalink
         );
@@ -2303,11 +2322,13 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             return;
         }
         wpme_simple_log_2('WSC-01-B - Subscription Cancelled - Lead ID: ' . $genoo_lead_id);
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'subscription cancelled',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-        get_wpme_subscription_activity_name($subscription->id), // Content
+        $subscription_product_name_values, // Title
+        $subscription_product_name_values, // Content
         ' '
         // Permalink
         );
@@ -2331,13 +2352,17 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             return;
         }
         wpme_simple_log_2('WSC-01-B -  Subscription Pending Cancellation - Lead ID: ' . $genoo_lead_id);
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
 
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'Subscription Pending Cancellation',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-        get_wpme_subscription_activity_name($subscription->id), // Content
-        ' '
+            'subscription cancelled',
+         $subscription_product_name_values, // Title
+          $subscription_product_name_values, // Content
+          ' '
+          // Permalink
         // Permalink
         );
     }
@@ -2358,11 +2383,14 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
 
         $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
 
+        $subscription_product_name = get_wpme_subscription_activity_name($subscription->id);
+        $subscription_product_name_values = implode(","." ", $subscription_product_name);
+
         wpme_fire_activity_stream(
             $genoo_lead_id,
             'subscription completed',
-            get_wpme_subscription_activity_name($subscription->id), // Title
-        get_wpme_subscription_activity_name($subscription->id), // Content
+          $subscription_product_name_values, // Title
+          $subscription_product_name_values, // Content
         ' '
         // Permalink
         );
@@ -2382,8 +2410,24 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartAddress2 = $order->get_address('shipping');
             $cartOrder = new \WPME\Ecommerce\CartOrder($id);
             $cartOrder->setApi($WPME_API);
-            // Total price
-            //$cartOrder->total_price = (float)$order->get_total();
+
+            $get_order = wc_get_order($order->id);
+
+            foreach ($get_order->get_items() as $item) {
+                $changedItemData = $item->get_data();
+                // Let's see if this is in
+                $id = (int)get_post_meta($changedItemData['product_id'], WPMKTENGINE_PRODUCT_KEY, true);
+                if (is_numeric($id) && $id > 0) {
+                    $array['product_id'] = $id;
+                    $array['quantity'] = $changedItemData['quantity'];
+                    $array['total_price'] = $changedItemData['total'];
+                    $array['unit_price'] = $changedItemData['total'] / $changedItemData['quantity'];
+                    $array['external_product_id'] = $changedItemData['product_id'];
+                    $array['name'] = $changedItemData['name'];
+                    $wpmeApiOrderItems[] = $array;
+                }
+            }
+          
             $cartOrder->setBillingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
             $cartOrder->setShippingAddress($cartAddress['address_1'], $cartAddress['address_2'], $cartAddress['city'], $cartAddress['country'], $cartAddress['phone'], $cartAddress['postcode'], '', $cartAddress['state']);
             $cartOrder->setTotal($order->get_total());
@@ -2394,8 +2438,8 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
             $cartOrder->changed->order_status = 'subrenewal';
             $cartOrder->financial_status = 'paid';
             $cartOrder->action = 'subscription Renewal';
-            $cartOrder
-                        ->changed->action = 'subscription Renewal';
+            $cartOrder->changed->action = 'subscription Renewal';
+            $cartOrder->addItemsArray($wpmeApiOrderItems);
             // Completed?
             // From email
             $cartOrderEmail = WPME\WooCommerce\Helper::getEmailFromOrder($order->id);
@@ -2404,8 +2448,7 @@ function wpme_get_order_stream_decipher(\WC_Order $order, &$cartOrder, $givenOrd
                 $cartOrder->changed->email_ordered_from = $cartOrderEmail;
             }
             try {
-                // wpme_get_order_stream_decipher($order, $cartOrder);
-                $result = $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
                 wpme_simple_log_2('UPDATED ORDER to PROCESSING :' . $cartOrder->id . ' : WOO ID : ' . $order->id);
             } catch (\Exception $e) {
                 wpme_simple_log_2('Processing ORDER, Genoo ID:' . $cartOrder->id);
