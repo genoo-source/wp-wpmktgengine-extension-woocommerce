@@ -1223,35 +1223,78 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
          */
         add_action('woocommerce_order_partially_refunded', function ($order_id, $refund_id) {
             // Get API
+
             global $WPME_API;
+
             // Genoo order ID
+
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+
             if (isset($WPME_API) && !empty($id)) {
-               
+
+                $order = new \WC_Order($order_id);
+
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
+
                 $cartOrder->setApi($WPME_API);
-                // @@ PART REFUND
-                $cartOrder->order_status = 'Order Refund Paid Partial';
-                $cartOrder
-                    ->changed->order_status = 'Order Refund Paid Partial';
-                $cartOrder->updateOrder(true);
-                // Get lead
-                $genoo_lead_id = get_wpme_order_lead_id($id);
-               
+
+                // Total price
+                 // Refunded?
+
+                 $cartOrder->financial_status = 'paid';
+
+                $cartOrder->order_status = 'refund partial';
+
+                $cartOrder->changed->order_status = 'refund partial';
+
+              
+
                 $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+
                 $subscription_product_name_values = implode(","." ", $subscription_product_name);
-                wpme_fire_activity_stream(
-                        $genoo_lead_id,
-                        'order refund partial',
-                        $subscription_product_name_values, // Title  $order->parent_id
-                        $subscription_product_name_values, // Content
-                    ' '
-                    // Permalink
-                    
-                );
-                wpme_simple_log_2('UPDATING ORDER PARTIALLY REFUNDED, Genoo ID:' . $id . ' : WOO ID : ' . $order_id);
+
+                $genoo_lead_id =  get_wpme_order_lead_id($id);
+
+                          wpme_fire_activity_stream(
+
+                                $genoo_lead_id,
+
+                                'order refund partial',
+
+                                $subscription_product_name_values, // Title  $order->parent_id
+
+                                $subscription_product_name_values, // Content
+
+                            ' '
+
+                            // Permalink
+
+                            
+
+                        );
+
+                // Completed?
+
+                $cartOrder->refund_date = \WPME\Ecommerce\Utils::getDateTime();
+
+                $cartOrder->refund_amount = $order->get_total_refunded();
+
+                try {
+                 
+                $WPME_API->updateCart($cartOrder->id, (array)$cartOrder->getPayload());
+                
+                wpme_simple_log_2('UPDATED ORDER to REFUNDED :' . $cartOrder->id . ' : WOO ID : ' . $order_id);
+
+                } catch (\Exception $e) {
+
+                    wpme_simple_log_2('Refunding ORDER, Genoo ID:' . $cartOrder->id);
+
+                    wpme_simple_log_2('FAILED to update order to REFUNDED :' . $id . ' : WOO ID : ' . $order_id . ' : Because : ' . $e->getMessage());
+
+                }
+
             }
-        }, 10, 2);
+      }, 10, 2);
 
        /**
          * Order cancelled
