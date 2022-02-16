@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.30
+    Version: 1.7.29
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -478,7 +478,7 @@ add_action('wpmktengine_init', function ($repositarySettings, $api, $cache) {
             }
         }, 10, 3);
 
-        add_action('woocommerce_order_status_failed', function ($order_id, $that) {
+        add_action('woocommerce_order_status_failed', function ($order_id, $ordersdetails) {
             wpme_simple_log_2('WOSF-1 Payment failed.');
             // Get API
             global $WPME_API;
