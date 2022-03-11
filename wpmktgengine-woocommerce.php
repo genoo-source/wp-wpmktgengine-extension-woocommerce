@@ -5,7 +5,7 @@
     Author:  Genoo, LLC
     Author URI: http://www.genoo.com/
     Author Email: info@genoo.com
-    Version: 1.7.29
+    Version: 1.7.30
     License: GPLv2
     WC requires at least: 3.0.0
     WC tested up to: 5.2.3
@@ -3529,3 +3529,317 @@ add_action(
     10,
     2
 );
+add_action("wp_head", "myplugin_ajaxurl_woocoomerce_extention");
+function myplugin_ajaxurl_woocoomerce_extention()
+{
+    echo '<script type="text/javascript">
+  var ajaxwoocommerceurl = "' .admin_url("admin-ajax.php") .'";
+</script>';
+}
+
+add_action('wp_ajax_woocommerce_activity_stream_types','woocommerce_activity_stream_types');
+add_action('wp_ajax_woocommerce_delete_plugin_options','woocommerce_delete_plugin_options');
+function woocommerce_activity_stream_types()
+{
+    if (
+        class_exists("\WPME\ApiFactory") &&
+        class_exists("\WPME\RepositorySettingsFactory")
+    ) {
+        $activate = true;
+        $repo = new \WPME\RepositorySettingsFactory();
+        $api = new \WPME\ApiFactory($repo);
+        if (class_exists("\Genoo\Api")) {
+            $isGenoo = true;
+        }
+    } elseif (
+        class_exists("\Genoo\Api") &&
+        class_exists("\Genoo\RepositorySettings")
+    ) {
+        $activate = true;
+        $repo = new \Genoo\RepositorySettings();
+        $api = new \Genoo\Api($repo);
+        $isGenoo = true;
+    } elseif (
+        class_exists("\WPMKTENGINE\Api") &&
+        class_exists("\WPMKTENGINE\RepositorySettings")
+    ) {
+        $activate = true;
+        $repo = new \WPMKTENGINE\RepositorySettings();
+        $api = new \WPMKTENGINE\Api($repo);
+    }
+    try {
+        $api->setStreamTypes([
+
+            [
+
+                'name' => 'viewed product',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'added product to cart',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order completed',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order canceled',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'cart emptied',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order refund full',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order refund partial',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'new cart',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'new order',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order cancelled',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order refund full',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'order refund partial',
+
+                'description' => '',
+
+            ],
+
+
+
+            [
+
+                'name' => 'upsell purchased',
+
+                'description' => 'Upsell Purchased',
+
+            ],
+
+            [
+
+                'name' => 'order payment declined',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'completed order',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription started',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription payment',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription renewal',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription reactivated',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription payment declined',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription payment cancelled',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription expired',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'sub renewal failed',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'sub payment failed',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription on hold',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'cancelled order',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'subscription cancelled',
+
+                'description' => '',
+
+            ],
+
+            [
+
+                'name' => 'Subscription Pending Cancellation',
+
+                'description' => '',
+
+            ],
+
+        ]);
+
+    } catch (\Exception $e) {
+        // Decide later Sub Renewal Failed
+    }
+}
+add_action("plugins_loaded", "woocommerce_update_db_check");
+function woocommerce_update_db_check()
+{
+    $option_value = get_option("plugin_file_updated");
+    if ($option_value == "yes") {
+        add_action("admin_notices", "sample_admin_notice_woocommerce_success");
+    }
+}
+function woocommerce_delete_plugin_options()
+{
+    delete_option('plugin_file_updated');
+}
+
+        
+    
+    function woocommerce_wp_upgrade_completed( $upgrader_object, $options ) {
+        // The path to our plugin's main file
+        $our_plugin = plugin_basename( __FILE__ );
+        // If an update has taken place and the updated type is plugins and the plugins element exists
+        if( $options['action'] == 'update' && $options['type'] == 'plugin' && isset( $options['plugins'] ) ) {
+         // Iterate through the plugins being updated and check if ours is there
+         foreach( $options['plugins'] as $plugin ) {
+          if( $plugin == $our_plugin ) {
+           // Your action if it is your plugin
+           update_option("plugin_file_updated", "yes");
+          }
+         }
+        }
+       }
+       add_action( 'upgrader_process_complete', 'woocommerce_wp_upgrade_completed', 10, 2 );
+       function sample_admin_notice_woocommerce_success()
+       {
+         ?>
+       <div class="notice notice-success is-dismissible woo-extension-notification">
+              <span><p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p> <p>WooCommerce extension has been updated. We have to update the woocommerce extension activity stream types.</p></span>
+           <span class="action-button-area">
+       <a class="clickoption button button-primary">Click Here</a>
+       </span>
+       </div>
+           <?php
+       }
