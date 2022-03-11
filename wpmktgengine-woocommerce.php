@@ -3836,7 +3836,7 @@ function woocommerce_delete_plugin_options()
        {
          ?>
        <div class="notice notice-success is-dismissible woo-extension-notification">
-              <span><p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p> <p>WooCommerce extension has been updated. We have to update the woocommerce extension activity stream types.</p></span>
+              <span><p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p> <p>WooCommerce extension has been updated. Update the woocommerce extension activity stream types.</p></span>
            <span class="action-button-area">
        <a class="clickoption button button-primary">Click Here</a>
        </span>
