@@ -401,6 +401,18 @@ add_action(
                             }
                         }
                     }
+                    echo '<script type="text/javascript">
+                    var ajaxwoocommerceurl = "' .admin_url("admin-ajax.php") .'";
+                  </script>';
+                    wp_enqueue_style(
+                        'activitystyle',
+                        plugins_url('/includes/activitystreamtypes.css', __FILE__)
+                    );
+                
+                    wp_enqueue_script(
+                        'activity-script',
+                        plugins_url('/includes/activitystream.js', __FILE__, [], '1.0.0', true)
+                    );
                 },
                 10,
                 1
@@ -3529,13 +3541,7 @@ add_action(
     10,
     2
 );
-add_action("wp_head", "myplugin_ajaxurl_woocoomerce_extention");
-function myplugin_ajaxurl_woocoomerce_extention()
-{
-    echo '<script type="text/javascript">
-  var ajaxwoocommerceurl = "' .admin_url("admin-ajax.php") .'";
-</script>';
-}
+
 
 add_action('wp_ajax_woocommerce_activity_stream_types','woocommerce_activity_stream_types');
 add_action('wp_ajax_woocommerce_delete_plugin_options','woocommerce_delete_plugin_options');

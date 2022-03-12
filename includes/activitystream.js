@@ -4,7 +4,7 @@ jQuery(document).on("click", ".clickoption", function () {
      type: "POST",
      cache: false,
      data: {
-         action: "activity_stream_types",
+         action: "woocommerce_activity_stream_types",
      },
      success: function () {
      jQuery.ajax({
@@ -12,7 +12,7 @@ jQuery(document).on("click", ".clickoption", function () {
      type: "POST",
      cache: false,
      data: {
-         action: "delete_plugin_options",
+         action: "woocommerce_delete_plugin_options",
      },
      success: function (data) {
       location.reload();
