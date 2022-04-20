@@ -1,4 +1,5 @@
-jQuery(document).on("click", ".clickoption", function () {   
+jQuery(document).on("click", ".clickoption", function () {
+    var ajaxwoocommerceurl = jQuery(".admininsertvalue").val();
     jQuery.ajax({
      url: ajaxwoocommerceurl,
      type: "POST",
@@ -27,3 +28,5 @@ jQuery(document).on("click", ".clickoption", function () {
      },
      });
       });
+	  
+	  
