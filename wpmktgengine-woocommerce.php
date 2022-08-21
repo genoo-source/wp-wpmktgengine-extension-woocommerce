@@ -3924,7 +3924,7 @@ add_action(
                 "order_type" => "any",
             ]);
         endif;
-
+      
         if (empty($subscriptions_ids)):
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
 
@@ -3933,6 +3933,8 @@ add_action(
             );
 
             $order = new \WC_Order($order_id);
+
+            $cartAddress = $order->get_address("billing");
 
             $cartOrder = new \WPME\Ecommerce\CartOrder($id);
 
@@ -4190,10 +4192,13 @@ add_action(
                                     $lead_id
                             );
                         } else {
-                             if (empty($WPME_API->http->response['body']) || empty($WPME_API->http->response->body))
-                              {
-       
-                            apivalidate(
+                            $email = $cartAddress['email'];
+
+                            $lead = $WPME_API->getLeadByEmail($email);
+                           
+                            if(empty($lead))
+                            {
+                             apivalidate(
                                 $order->id,
                                 "completed",
                                 "",
@@ -4344,9 +4349,11 @@ add_action(
                                 $order_id
                         );
                     } else {
-                        if (empty($WPME_API->http->response['body']) || empty($WPME_API->http->response->body))
-                              {
-       
+                         $email = $cartAddress['email'];
+                            $lead = $WPME_API->getLeadByEmail($email);
+                           
+                        if(empty($lead))
+                        {
                         apivalidate(
                             $order->id,
                             "completed",
@@ -4361,9 +4368,11 @@ add_action(
                     }
                     }
                 } else {
-                if (empty($WPME_API->http->response['body']) || empty($WPME_API->http->response->body))
-                       {
-       
+                    $email = $cartAddress['email'];
+                    $lead = $WPME_API->getLeadByEmail($email);
+                   
+                    if(empty($lead))
+                    {
                     apivalidate(
                         $order->id,
                         "completed",
@@ -6363,13 +6372,4 @@ if (!function_exists('mv_save_wc_order_other_fields'))
 
         }
     }
-}
-
-function custom_logs($message) { 
-    if(is_array($message)) { 
-        $message = json_encode($message); 
-    } 
-    $file = fopen("../custom_logs1289.log","a"); 
-    echo fwrite($file, "\n" . date('Y-m-d h:i:s') . " :: " . $message); 
-    fclose($file); 
 }

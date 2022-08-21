@@ -117,12 +117,5 @@ function send_queue_record_details()
 
 }
 }
-function custom_logs11($message) { 
-    if(is_array($message)) { 
-        $message = json_encode($message); 
-    } 
-    $file = fopen("../custom_logs128912.log","a"); 
-    echo fwrite($file, "\n" . date('Y-m-d h:i:s') . " :: " . $message); 
-    fclose($file); 
-}
+
 ?>
