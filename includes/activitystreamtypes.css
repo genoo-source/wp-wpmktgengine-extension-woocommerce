@@ -11,9 +11,21 @@
     position: relative;
     width: 110px;
    }
+
    .wpme-upgrader-custom-notice .notice-left {
        display: table-cell;
        padding: 10px;
+   }
+   .admin-button-row.admin-push-all button.pushalltogenoo
+   {
+   margin-right: -9px;
+    margin-top: 0;
+    padding: 6px 12px;
+    background: #135e96;
+    border: solid 1px #135e96;
+    box-shadow: none;
+    color: #fff;
+    border-radius: 5px;
    }
    .woo-extension-notification p {
        width: 100% !important; 
@@ -102,8 +114,131 @@
 .woo-extension-notification span.action-button-area a.clickoption {
     min-width: 120px;
 }
+#GenooQueue .descriptionAbsolute
+{
+  position:relative !important;
 
+}
+table.desin,table.desn {
+    float: left;
+   /* width: calc(100% + 110px);*/
+    width: 100% !important;
+    /*margin-left: -125px;*/
+}
+table.desin th,table.desn th {
+    border: solid 1px #c5c5c5;
+    color: #999;
+    height: 5px;
+    border-right: none;
+    padding: 10px;
+   width: auto !important;
+}
+table.desin th:last-child {
+  border-right: solid 1px #c5c5c5;
+}
+table.desin tr td,table.desn tr td {
+    border: solid 1px #e9e9e9;
+    color: #353535;
+}
+.button-row {
+    float: left;
+    width: 100%;
+    height: auto;  
+     margin-left: 10px;  
+}
+.button-row.push-all {
+    display: flex;
+    grid-gap: 20px;
+}
+button.pushalltogenoo {
+    float: left;
+    width: auto;
+    margin-top: 15px;
+}
+.form-table th{
+  width:100px !important;
+}
 
-
-
-
+div#GenooQueue span.description.descriptionAbsolute {
+    margin-left: -115px;
+}
+div#GenooQueue span.description.descriptionAbsolute {
+    margin-left: -115px;
+    max-width: calc(100% + 110px );
+}
+div#GenooQueue span.description.descriptionAbsolute table.dataTable {
+    margin-top: 10px;
+}
+div#GenooQueue span.description.descriptionAbsolute .dataTables_length select {
+    width: 60px;
+} 
+.button-row.push-all {
+    position: absolute;
+    top: 0;
+    right: 10px;
+    width: auto;
+}
+.button-row.push-all button.pushalltogenoo,.insertgenoorecords {
+    margin-right: -9px;
+    margin-top: 0;
+    padding: 6px 12px;
+    background: #135e96;
+    border: solid 1px #135e96;
+    box-shadow: none;
+    color: #fff;
+    border-radius: 5px;
+}
+span.description.descriptionAbsolute li.nav-item button {
+    background-color: #dcdcde;
+    border: solid 1px #c3c4c7;
+    border-bottom: none;
+    margin-right: 7.5px;
+    color: #50575e;
+    font-weight: 600;
+    font-size: 14px;
+}
+span.description.descriptionAbsolute ul#myTab {
+    border-bottom: solid 1px #c3c4c7;
+    margin-bottom: 10px;
+}
+span.description.descriptionAbsolute li.nav-item {
+    margin-bottom: 0;
+}
+#GenooQueue #submit{
+  display: none;
+}
+span.description.descriptionAbsolute ul.nav.nav-tabs li a {
+    background-color: #dcdcde;
+    border-radius: 0;
+    border: solid 1px #c3c4c7;
+    font-weight: 600;
+    color: #50575e;
+    letter-spacing: 0.5px;
+        margin-right: 8px;
+}
+span.description.descriptionAbsolute ul.nav.nav-tabs li.active a {
+    background-color: #f0f0f1;
+    border-radius: 0;
+    border: solid 1px #c3c4c7;
+    font-weight: 600;
+    color: #000000;
+    letter-spacing: 0.5px;
+    border-bottom: none;
+    position: relative;
+    top: 1px;
+}
+span.description.descriptionAbsolute ul.nav.nav-tabs {
+    margin-bottom: 10px;
+}
+table.desin thead input[type=checkbox], table.desin th:last-child input[type=checkbox],table.desn thead input[type=checkbox], table.desn th:last-child input[type=checkbox] {
+    position: relative;
+    left: -8px;
+    top: -2px;
+    border-radius: 0;
+}
+table.desin thead input[type=checkbox]:focus,table.desn thead input[type=checkbox]:focus {
+  outline: none;
+}
+table.desin input[type=checkbox],table.desn input[type=checkbox] {
+    border-radius: 0;
+}
