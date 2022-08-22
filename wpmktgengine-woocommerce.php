@@ -250,8 +250,8 @@ register_activation_hook(__FILE__, function () {
             order_id int(11) unsigned  null,
             subscription_id int(8) unsigned  null,
             order_activitystreamtypes varchar(255) null,
-            payload  varchar(255) null,
-            order_payload varchar(255) null,
+            payload  Text(500) null,
+            order_payload Text(500) null,
             description  varchar(255) null,
             active_type int(11) null,
             status mediumint(8) unsigned  null,
@@ -262,7 +262,7 @@ register_activation_hook(__FILE__, function () {
             
             
        $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
-       ADD COLUMN active_type int(11),order_payload varchar(255)";
+       ADD COLUMN active_type int(11),order_payload Text(500) null, payload  Text(500) null";
 
        $wpdb->query($api_queue);
 
