@@ -3628,9 +3628,35 @@ add_action(
                $subids[] = $subscriptions_id->id;
               }
         
-         $order = new \WC_Order($order_id);
+                 $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
+                
+                                
+                $get_order = wc_get_order($order->id);
+
+                foreach ($get_order->get_items() as $item) {
+                    $changedItemData = $item->get_data();
+                    // Let's see if this is in
+                    $productid = (int) get_post_meta(
+                        $changedItemData["product_id"],
+                        WPMKTENGINE_PRODUCT_KEY,
+                        true
+                    );
+                    if (is_numeric($productid) && $productid > 0) {
+                        $array["product_id"] = $id;
+                        $array["quantity"] = $changedItemData["quantity"];
+                        $array["total_price"] = $changedItemData["total"];
+                        $array["unit_price"] =
+                            $changedItemData["total"] /
+                            $changedItemData["quantity"];
+                        $array["external_product_id"] =
+                            $changedItemData["product_id"];
+                        $array["name"] = $changedItemData["name"];
+                        $wpmeApiOrderItems[] = $array;
+                    }
+                }
+               $cartOrder->addItemsArray($wpmeApiOrderItems);
                 // Total price
                 $cartOrder->total_price = $order->get_total();
                 $cartOrder->tax_amount = $order->get_total_tax();
@@ -3714,7 +3740,8 @@ add_action(
             if(empty($subscriptions_ids)){
               if(empty($lead))
                   {
-                          $cartOrder->action = "new cart";
+                     
+                       $cartOrder->action = "new cart";
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
@@ -3876,16 +3903,14 @@ add_action(
                  $cartAddress = $order->get_address("billing");
                  $email = $cartAddress['email'];
                   $lead = $WPME_API->getLeadByEmail($email); 
-            if(empty($lead))
-                  {
-                      
-                        $cartOrder->action = "new cart";
+                    if(empty($lead))
+                    {
+                       $cartOrder->action = "new cart";
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
-                      // $cartOrder->financial_status = "";
-                     
-                     apivalidate($order->id,
+                    
+                       apivalidate($order->id,
                                 'subscription started',
                                 $subscription->id,
                                 $order->date_created,
