@@ -262,7 +262,7 @@ register_activation_hook(__FILE__, function () {
             
             
        $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
-       ADD COLUMN active_type int(11),order_payload Text(500) null, payload  Text(500) null";
+       ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
 
        $wpdb->query($api_queue);
 
@@ -3628,7 +3628,7 @@ add_action(
                $subids[] = $subscriptions_id->id;
               }
         
-                 $order = new \WC_Order($order_id);
+                $order = new \WC_Order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 
@@ -3644,7 +3644,7 @@ add_action(
                         true
                     );
                     if (is_numeric($productid) && $productid > 0) {
-                        $array["product_id"] = $id;
+                        $array["product_id"] = $productid;
                         $array["quantity"] = $changedItemData["quantity"];
                         $array["total_price"] = $changedItemData["total"];
                         $array["unit_price"] =
@@ -3723,6 +3723,7 @@ add_action(
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
+                       $cartOrder->financial_status = "";
                     apivalidate(
                         $order->id,
                         "subscription started",
@@ -3745,6 +3746,7 @@ add_action(
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
+                       $cartOrder->financial_status = "";
              apivalidate(
                         $order->id,
                         "new order",
@@ -3909,6 +3911,7 @@ add_action(
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
+                       $cartOrder->financial_status = "";
                     
                        apivalidate($order->id,
                                 'subscription started',
@@ -6398,3 +6401,5 @@ if (!function_exists('mv_save_wc_order_other_fields'))
         }
     }
 }
+
+

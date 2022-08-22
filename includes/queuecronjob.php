@@ -62,9 +62,17 @@ function send_queue_record_details()
              if($passorders->order_id){
                  
                  if(in_array($get_all_queue_record->order_activitystreamtypes,$subscription_item_values)){
-                 
                   $orderpayload->financial_status = 'paid';
+                  
+                  switch($get_all_queue_record->order_activitystreamtypes)
+                  {
+                  case "subscription started":
                   $orderpayload->order_status = 'subpayment';
+                  break;
+                  case "subscription Renewal":
+                  $orderpayload->order_status = 'subrenewal';
+                  break;
+                  }
                  }
                  
                   if(!in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
@@ -86,8 +94,9 @@ function send_queue_record_details()
                         true
                     );
 
-                    $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
-                    
+                $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
+                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal')
+                    {
                 wpme_fire_activity_stream(
                     $genoo_lead_id,
                     $get_all_queue_record->order_activitystreamtypes,
@@ -96,6 +105,7 @@ function send_queue_record_details()
                     " "
                     // Permalink
                 );
+                    }
                  if($result==true || $genoo_lead_id){
                     $wpdb->update(
             $genoomem_genooqueue,
@@ -117,5 +127,7 @@ function send_queue_record_details()
 
 }
 }
+
+
 
 ?>
