@@ -703,7 +703,7 @@ add_action(
 
                                 $fields["WPME_ECOMMERCE"] = [$field];
 
-                                $exists = true;
+                               // $exists = true;
 
                                 break;
                             }
