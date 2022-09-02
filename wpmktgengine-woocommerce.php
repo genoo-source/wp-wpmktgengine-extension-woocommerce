@@ -355,8 +355,11 @@ register_activation_hook(__FILE__, function () {
 
                 // Save option
                 $option["genooLeadUsercustomer"] = $activeLeadType;
+                $option["cronsetup"] = '5';
 
                 update_option("WPME_ECOMMERCE", $option);
+                
+               
             }
 
             // Ok, let's see, do the products import, if it ran before, it won't run,
@@ -710,6 +713,10 @@ add_action(
                             $exists === false &&
                             isset($fields["genooLeads"][1]["options"])
                         ) {
+                            
+                         $array_values = [];
+                        $array_values['minutes'] = 'Minutes';
+                        $array_values['hour'] = 'Hour';
                             $fields["WPME_ECOMMERCE"] = [
                                 [
                                     "label" => "Save customer lead as",
@@ -721,6 +728,22 @@ add_action(
                                     "options" =>
                                         $fields["genooLeads"][1]["options"],
                                 ],
+                                
+                                
+                                [
+                                    'label' => __('Failed queue cron setting(Minutes)', 'wpmktengine'),
+
+                                    "name" => "cronsetup",
+
+                                    "type" => "text",
+                                    
+                                     'attr' => [
+                                            'style' => 'display: block',
+                                        ]
+
+                                ],
+                                
+                                
                             ];
                         }
                     }
@@ -2103,6 +2126,8 @@ add_action(
                                     $cartAddress2['state']
                                 );
                                 $cartOrder->order_number = $order_id;
+                                $cartOrder->first_name = $order->get_billing_first_name;
+                                $cartOrder->last_name = $order->get_billing_last_name;
                                 $cartOrder->currency = $order->get_order_currency();
                                 $cartOrder->setTotal($order->get_total());
                                 $cartOrder->addItemsArray($wpmeApiOrderItems);
@@ -2180,7 +2205,7 @@ add_action(
                                     );
                                 }
                             }
-                                   else
+                           else
                             {
                                 
                            $email = $cartAddress['email'];
@@ -2213,6 +2238,7 @@ add_action(
                     endforeach; // Payed!
                 endif;
             });
+          
             /**
              * Order Failed
              */
@@ -2306,6 +2332,8 @@ add_action(
                 10,
                 1
             );
+        
+             
             /**
              * Order Refunded
              */
@@ -2393,7 +2421,7 @@ add_action(
                             apivalidate(
                                 $order->id,
                                 "order refund full",
-                                "",
+                                "0",
                                 $order->date_created,
                                 (array) $cartOrder->object,
                                  (array) $cartOrder->getPayload(),
@@ -2415,7 +2443,7 @@ add_action(
                         apivalidate(
                             $order->id,
                             "order refund full",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -2632,7 +2660,7 @@ add_action(
                             apivalidate(
                                 $order->id,
                                 "order refund partial",
-                                "",
+                                "0",
                                 $order->date_created,
                                 (array) $cartOrder->object,
                                  (array) $cartOrder->getPayload(),
@@ -2652,7 +2680,7 @@ add_action(
                             apivalidate(
                             $order->id,
                             "order refund partial",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -2675,7 +2703,7 @@ add_action(
                             apivalidate(
                             $order->id,
                             "order refund partial",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -2774,12 +2802,13 @@ add_action(
                         $email = $cartAddress['email'];
                     
                        $lead = $WPME_API->getLeadByEmail($email);
+                       
                        if(empty($lead))
                        {
                             apivalidate(
                                 $order->id,
                                 "cancelled order",
-                                "",
+                                "0",
                                 $order->date_created,
                                 (array) $cartOrder->object,
                                  (array) $cartOrder->getPayload(),
@@ -2794,7 +2823,7 @@ add_action(
                         apivalidate(
                             $order->id,
                             "cancelled order",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -3680,7 +3709,8 @@ add_action(
                     $cartOrder->email_ordered_from = $cartOrderEmail;
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
                 }
-
+                $cartOrder->first_name = $order->get_billing_first_name;
+                $cartOrder->last_name = $order->get_billing_last_name;
             if (isset($WPME_API) && !empty($id)) {
                
                 try {
@@ -3715,11 +3745,12 @@ add_action(
               {
                   $cartAddress = $order->get_address('billing');
                   $cartOrderEmail = $cartAddress['email'];
-                $lead = $WPME_API->getLeadByEmail($cartOrderEmail); 
+                  $lead = $WPME_API->getLeadByEmail($cartOrderEmail); 
                   
                 if(empty($lead))
-                  {
-                         $cartOrder->action = "new cart";
+                {
+                     
+                       $cartOrder->action = "new cart";
                        $cartOrder->changed->action = "new cart";
                        $cartOrder->order_status = "cart";
                        $cartOrder->changed->order_status = "cart";
@@ -3737,10 +3768,11 @@ add_action(
                     );
                 }
               }
-        
+              
+
             if(empty($subscriptions_ids)){
               if(empty($lead))
-                  {
+                {
                      
                        $cartOrder->action = "new cart";
                        $cartOrder->changed->action = "new cart";
@@ -3768,7 +3800,78 @@ add_action(
     10,
     1
 );
+add_action( 'woocommerce_order_status_on-hold', 'enable_processing_to_on_hold_notification', 10, 2 );
+function enable_processing_to_on_hold_notification( $order_id, $order ){
+    // Getting all WC_emails array objects
+    
+        global $WPME_API;
 
+    
+   $repo = new \WPME\RepositorySettingsFactory();
+
+   $api = new \WPME\ApiFactory($repo);
+
+   $user = wp_get_current_user();
+
+   $user_meta = get_userdata($user->ID);
+
+   $user_roles = $user->roles;
+
+   $genoo_id = get_post_meta($order->id, WPMKTENGINE_ORDER_KEY, true);
+    
+   $cartAddress = $order->get_address("billing");
+   
+   $email = $cartAddress['email'];
+    
+   $lead = $WPME_API->getLeadByEmail($email);
+
+     
+   if(empty($lead))
+    {
+         apivalidate(
+            $order->id,
+            "order on hold",
+            "0",
+            $order->date_created,
+            $order,
+            '',
+            "0",
+            "API not found",
+            "13"
+        ); 
+    }
+
+
+    $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
+
+    $subscription_product_name = get_wpme_subscription_activity_name(
+        $order->id
+    );
+
+    $subscription_product_name_values = implode(
+        "," . " ",
+
+        $subscription_product_name
+    );
+
+    if (in_array("administrator", $user_roles)):
+        
+        wpme_fire_activity_stream(
+            $genoo_lead_id,
+
+            "order on hold",
+
+            $subscription_product_name_values, // Title
+            $subscription_product_name_values, // Content
+            " "
+
+            // Permalink
+        );
+    endif;
+    
+    
+ 
+}
 add_action(
     'woocommerce_subscription_payment_complete',
     function ($subscription) use ($api) {
@@ -3871,7 +3974,8 @@ add_action(
                         );
                     }
                 }
-
+                 $cartOrder->first_name = $order->get_billing_first_name;
+                $cartOrder->last_name = $order->get_billing_last_name;
             if (isset($WPME_API) && !empty($id)) {
             
                 try {
@@ -3953,7 +4057,6 @@ add_action(
             ]);
         endif;
       
-        if (empty($subscriptions_ids)):
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
 
             wpme_simple_log_2(
@@ -4002,6 +4105,9 @@ add_action(
 
             if (isset($WPME_API) && !empty($id)) {
                 try {
+                    
+                if (empty($subscriptions_ids)):
+
                     $result = $WPME_API->updateCart(
                         $cartOrder->id,
 
@@ -4014,11 +4120,13 @@ add_action(
                             " : WOO ID : " .
                             $order_id
                     );
+                    
+                     endif;
                 } catch (\Exception $e) {
                     apivalidate(
                         $order->id,
                         "completed",
-                        "",
+                        "0",
                         $order->date_created,
                         (array) $cartOrder->object,
                          (array) $cartOrder->getPayload(),
@@ -4229,7 +4337,7 @@ add_action(
                              apivalidate(
                                 $order->id,
                                 "completed",
-                                "",
+                                "0",
                                 $order->date_created,
                                 (array) $cartOrder->object,
                                  (array) $cartOrder->getPayload(),
@@ -4243,7 +4351,7 @@ add_action(
                         apivalidate(
                             $order->id,
                             "completed",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -4377,6 +4485,7 @@ add_action(
                                 $order_id
                         );
                     } else {
+                        
                          $email = $cartAddress['email'];
                             $lead = $WPME_API->getLeadByEmail($email);
                            
@@ -4385,7 +4494,7 @@ add_action(
                         apivalidate(
                             $order->id,
                             "completed",
-                            "",
+                            "0",
                             $order->date_created,
                             (array) $cartOrder->object,
                              (array) $cartOrder->getPayload(),
@@ -4404,7 +4513,7 @@ add_action(
                     apivalidate(
                         $order->id,
                         "completed",
-                        "",
+                        "0",
                         $order->date_created,
                         (array) $cartOrder->object,
                          (array) $cartOrder->getPayload(),
@@ -4415,7 +4524,7 @@ add_action(
                           }
                 }
             }
-        endif;
+       
     },
     10,
 
@@ -5069,7 +5178,9 @@ add_action(
                     $cartAddress["state"]
                 );
                  $cartOrder->order_number = $order->id;
-                $cartOrder->setTotal($order->get_total());
+                 $cartOrder->first_name = $order->get_billing_first_name;
+                 $cartOrder->last_name = $order->get_billing_last_name;
+                 $cartOrder->setTotal($order->get_total());
                 $cartOrder->total_price = $order->get_total();
                 $cartOrder->tax_amount = $order->get_total_tax();
                 $cartOrder->shipping_amount = $order->get_total_shipping();
@@ -5343,7 +5454,7 @@ function apivalidate(
     $getpayload = json_encode($order_payload,true);
     
     $check_leads_already_exists = $wpdb->get_var(
-                            "SELECT count(*) from $queuerecords  WHERE `order_id` = $order_id AND `subscription_id`= $subscription_id AND `active_type`='$active_type' AND `status`=0"
+                            "SELECT count(*) from $queuerecords  WHERE `order_id` = $order_id AND `subscription_id`= $subscription_id AND `active_type`=$active_type AND `status`=0"
                         );
  if ($check_leads_already_exists == 0) {
     $wpdb->insert($queuerecords, [
