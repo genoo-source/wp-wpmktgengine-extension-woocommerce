@@ -63,8 +63,10 @@ function send_queue_record_details()
                     "cancelled order",
                     "subscription expired",
                     "order refund full",
-                    "pending payment",
-                    "completed"
+                    "completed",
+                    "order on hold",
+                    "pending payment"
+                
                  ];
                 $subscription_item_values = ['subscription started','subscription Renewal','new order'];
                 
@@ -129,7 +131,8 @@ function send_queue_record_details()
                     );
                     
                  $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
-                
+                 
+
               
                 if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal')
                 {
@@ -143,7 +146,7 @@ function send_queue_record_details()
                 );
                     }
                     
-                  if($result==true || $genoo_lead_id || $genoo_ids){
+                  if($result==true || $genoo_lead_id){
                       
                     
                     $wpdb->update(
@@ -157,6 +160,28 @@ function send_queue_record_details()
                     ]
         );
                  }
+                if(in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
+                    
+                    $cartAddress = $order->get_address("billing");
+   
+                        $email = $cartAddress['email'];
+                    
+                     $lead = $WPME_API->getLeadByEmail($email);
+                     
+                   if(!empty($lead))
+                     {
+                            $wpdb->update(
+                    $genoomem_genooqueue,
+                    [
+                        "status" => 1,
+                    ],
+                    [
+                        "order_id" => $order_id,
+                      "order_activitystreamtypes" =>  $get_all_queue_record->order_activitystreamtypes
+                    ]
+        );
+                     }
+                  }
        }catch (Exception $e) {
             if ($WPME_API->http->getResponseCode() == 404):
              // Looks like orders not found

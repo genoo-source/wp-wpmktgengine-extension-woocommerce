@@ -3640,6 +3640,7 @@ add_action(
         // Get API
         global $WPME_API;
         // Genoo order ID
+      
         $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
           if (!$getrenewal):
@@ -3658,6 +3659,7 @@ add_action(
               }
         
                 $order = new \WC_Order($order_id);
+                
                 $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                 $cartOrder->setApi($WPME_API);
                 
@@ -3749,6 +3751,8 @@ add_action(
                   
                 if(empty($lead))
                 {
+                    $rand = rand();
+
                      
                        $cartOrder->action = "new cart";
                        $cartOrder->changed->action = "new cart";
@@ -3764,7 +3768,7 @@ add_action(
                         (array) $cartOrder->getPayload(),
                         "0",
                         "API not found",
-                        "1"
+                        $rand
                     );
                 }
               }
@@ -3788,7 +3792,7 @@ add_action(
                          (array) $cartOrder->getPayload(),
                         "0",
                         "API not found",
-                        "7"
+                        $rand
                         
                     );
             }
