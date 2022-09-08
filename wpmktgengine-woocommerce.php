@@ -965,6 +965,7 @@ add_action(
                             ["order_type" => "any"]
                         );
                     endif;
+                    $rand = rand();
                     foreach ($subscriptions_ids as $subscriptions_id):
                         $id = get_post_meta(
                             $order_id,
@@ -1089,7 +1090,7 @@ add_action(
                                     (array) $cartOrder->getPayload(),
                                     "0",
                                     "API  not found",
-                                    "4"
+                                    $rand
                                 );
                             }
 
@@ -1118,7 +1119,7 @@ add_action(
                                      (array) $cartOrder->getPayload(),
                                     "0",
                                     "API  not found",
-                                    "4"
+                                   $rand
                                 );
                             }
                             }
@@ -1132,7 +1133,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 $e->getMessage(),
-                                "4"
+                               $rand
                             );
                         }
                     endforeach;
@@ -2043,6 +2044,8 @@ add_action(
                     '_subscription_renewal',
                     true
                 );
+                
+                $rand = rand();
 
                 if (!empty($subscriptions_ids) && $getrenewal):
                     foreach ($subscriptions_ids as $subscriptions_id):
@@ -2230,7 +2233,7 @@ add_action(
                                          (array) $cartOrder->getPayload(),
                                         "0",
                                         'API not found',
-                                        "2"
+                                       $rand
                                     );
                           }
                             }
@@ -2249,6 +2252,7 @@ add_action(
                     // Get API
                     global $WPME_API;
                     // Genoo order ID
+                    $rand = rand();
                     $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
                     $order = new \WC_Order($order_id);
                     $cartOrder = new \WPME\Ecommerce\CartOrder($id);
@@ -2303,7 +2307,7 @@ add_action(
                                     (array) $cartOrder->getPayload(),
                                     "0",
                                     $e->getMessage(),
-                                    "6"
+                                    $rand
                                 );
                             }
                         } else {
@@ -2322,7 +2326,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 "API key not found",
-                                "6"
+                                $rand
                             );
                         }
                             
@@ -2349,6 +2353,8 @@ add_action(
                     $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
 
                     $order = new \WC_Order($order_id);
+                    
+                    $rand = rand();
 
                     $cartOrder = new \WPME\Ecommerce\CartOrder($id);
 
@@ -2427,7 +2433,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 $e->getMessage(),
-                                "8"
+                               $rand
                             );
                         }
                     }
@@ -2449,7 +2455,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             "API key not found",
-                            "8"
+                            $rand
                         );  
                     }
                     }
@@ -2595,6 +2601,8 @@ add_action(
                 function ($order_id, $refund_id) {
                     // Get API
                     global $WPME_API;
+                    
+                    $rand = rand();
 
                     // Genoo order ID
                     $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
@@ -2666,7 +2674,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 $e->getMessage(),
-                                "9"
+                               $rand
                             );
                         }
                          $cartAddress = $order->get_address("billing");
@@ -2686,7 +2694,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             "API not found",
-                            "9"
+                            $rand
                         );
                            }
                     }
@@ -2709,7 +2717,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             "API not found",
-                            "9"
+                            $rand
                         );
                            }
                     }
@@ -2731,6 +2739,8 @@ add_action(
                 function ($order_id) {
                     // Get API
                     global $WPME_API;
+                    
+                    $rand = rand();
 
                     // Genoo order ID
                     $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
@@ -2814,7 +2824,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 "API key not found",
-                                "10"
+                                $rand
                             );  
                         }
                         }
@@ -2829,7 +2839,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             $e->getMessage(),
-                            "10"
+                            $rand
                         );
                     }
                 },
@@ -3826,6 +3836,9 @@ function enable_processing_to_on_hold_notification( $order_id, $order ){
    $cartAddress = $order->get_address("billing");
    
    $email = $cartAddress['email'];
+   
+     $rand = rand();
+
     
    $lead = $WPME_API->getLeadByEmail($email);
 
@@ -3841,7 +3854,7 @@ function enable_processing_to_on_hold_notification( $order_id, $order ){
             '',
             "0",
             "API not found",
-            "13"
+            $rand
         ); 
     }
 
@@ -3884,6 +3897,8 @@ add_action(
         $id = get_post_meta($subscription->id, WPMKTENGINE_ORDER_KEY, true);
         $genoo_id = get_wpme_order_from_woo_order($subscription);
         $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
+        $rand = rand();
+
         if (!$genoo_lead_id) {
             return;
         }
@@ -3996,17 +4011,17 @@ add_action(
                             $subscription->id
                     );
                 } catch (\Exception $e) {
-                    wpme_simple_log_2(
-                        'Processing ORDER, Genoo ID:' . $cartOrder->id
-                    );
-                    wpme_simple_log_2(
-                        'FAILED to updated order to PROCESSING :' .
-                            $id .
-                            ' : WOO ID : ' .
-                            $subscription->id .
-                            ' : Because : ' .
-                            $e->getMessage()
-                    );
+                  apivalidate($order->id,
+                                'subscription started',
+                                $subscription->id,
+                                $order->date_created,
+                                (array) $cartOrder->object,
+                                (array) $cartOrder->getPayload(),
+                                "0",
+                                "API key not found",
+                               $rand
+                            );
+                 
                 }
             }
             else {
@@ -4029,7 +4044,7 @@ add_action(
                                 (array) $cartOrder->getPayload(),
                                 "0",
                                 "API key not found",
-                                "1"
+                               $rand
                             );
                  
                   
@@ -4062,6 +4077,8 @@ add_action(
         endif;
       
             $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+            
+             $rand = rand();
 
             wpme_simple_log_2(
                 "Woocommerce order completed. Genoo order id: " . $id
@@ -4136,7 +4153,7 @@ add_action(
                          (array) $cartOrder->getPayload(),
                         "0",
                         $e->getMessage(),
-                         "5"
+                         $rand
                     );
                 }
             } elseif (isset($WPME_API)) {
@@ -4347,7 +4364,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 "API key not found",
-                                 "5"
+                                $rand
                             );
                         }
                         }
@@ -4361,7 +4378,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             $e->getMessage(),
-                             "5"
+                             $rand
                         );
                     }
 
@@ -4504,7 +4521,7 @@ add_action(
                              (array) $cartOrder->getPayload(),
                             "0",
                             "API key not found",
-                             "5"
+                             $rand
                         );
                     }
                     }
@@ -4523,7 +4540,7 @@ add_action(
                          (array) $cartOrder->getPayload(),
                         "0",
                         "API key not found",
-                        "5"
+                        $rand
                     );
                           }
                 }
@@ -4550,6 +4567,7 @@ function on_reactive($subscription)
 {
     global $WPME_API;
     if ($subscription->suspension_count != 0):
+        $rand = rand();
         $genoo_id = get_wpme_order_from_woo_order($subscription);
 
         $order = new \WC_Order($subscription->id);
@@ -4572,7 +4590,7 @@ function on_reactive($subscription)
             '',
             "0",
             "API not found",
-            "11"
+            $rand
         );
     }
 
@@ -4634,6 +4652,8 @@ function pending_cancel($subscription)
 {
     global $WPME_API;
     $order = new \WC_Order($subscription->id);
+    
+    $rand = rand();
 
     $cartAddress = $order->get_address("billing");
    
@@ -4654,7 +4674,7 @@ function pending_cancel($subscription)
             '',
             "0",
             "API not found",
-            "12"
+           $rand
         );
     }
 
@@ -4737,23 +4757,7 @@ function on_hold_subscription($subscription)
    
         $email = $cartAddress['email'];
     
-       $lead = $WPME_API->getLeadByEmail($email);
-
-     
-   if(empty($lead))
-    {
-         apivalidate(
-            $order->parent_id,
-            "subscription on hold",
-            $subscription->id,
-            $subscription->date_created,
-            $subscription,
-            '',
-            "0",
-            "API not found",
-            "13"
-        ); 
-    }
+    
 
     // $order = new \WC_Order($subscription->id);
 
@@ -4770,6 +4774,26 @@ function on_hold_subscription($subscription)
     );
 
     if (in_array("administrator", $user_roles)):
+        
+        
+    $lead = $WPME_API->getLeadByEmail($email);
+      
+       $rand = rand();
+     
+   if(empty($lead))
+    {
+         apivalidate(
+            $order->parent_id,
+            "subscription on hold",
+            $subscription->id,
+            $subscription->date_created,
+            $subscription,
+            '',
+            "0",
+            "API not found",
+           $rand
+        ); 
+    }
         
         wpme_fire_activity_stream(
             $genoo_lead_id,
@@ -4805,6 +4829,8 @@ function customer_on_hold_subscription($subscription)
     $genoo_id = get_wpme_order_from_woo_order($subscription);
 
     $order = new \WC_Order($subscription->id);
+    
+    $rand = rand();
 
   $cartAddress = $order->get_address("billing");
    
@@ -4824,7 +4850,7 @@ function customer_on_hold_subscription($subscription)
             '',
             "0",
             "API not found",
-            "14"
+            $rand
         ); 
     }
 
@@ -4883,6 +4909,8 @@ add_action(
         );
 
         $order = new \WC_Order($subscription->id);
+        
+        $rand = rand();
 
         $genoo_id = get_wpme_order_from_woo_order($subscription);
         
@@ -4904,7 +4932,7 @@ add_action(
                 '',
                 "0",
                 "API  not found",
-                "15"
+                $rand
             );
     }
 
@@ -4972,6 +5000,8 @@ function pending_cancel_subscription($subscription)
     global $WPME_API;
 
     $order = new \WC_Order($subscription->id);
+    
+    $rand = rand();
 
     $genoo_id = get_wpme_order_from_woo_order($subscription);
    
@@ -4993,7 +5023,7 @@ function pending_cancel_subscription($subscription)
             '',
             "0",
             "API not found",
-            "16"
+            $rand
         );
     }
 
@@ -5064,6 +5094,8 @@ function my_on_subscription_expired($subscription)
    
     $email = $cartAddress['email'];
     
+    $rand = rand();
+    
     $lead = $WPME_API->getLeadByEmail($email);
 
      
@@ -5078,7 +5110,7 @@ function my_on_subscription_expired($subscription)
             '',
             "0",
             "API key not found",
-            "17"
+           $rand
         );
     }
     $genoo_id = get_wpme_order_from_woo_order($subscription);
@@ -5130,6 +5162,8 @@ add_action(
 
         if ($manual == "true"):
              $order = new \WC_Order($order->id);
+             
+             $rand = rand();
             $id = get_post_meta($order->id, WPMKTENGINE_ORDER_KEY, true);
             
                $cartAddress = $order->get_address("billing");
@@ -5229,7 +5263,7 @@ add_action(
                                  (array) $cartOrder->getPayload(),
                                 "0",
                                 "API not found",
-                                 "3"
+                                 $rand
                             ); 
                         }
 
@@ -5260,7 +5294,7 @@ add_action(
                          (array) $cartOrder->getPayload(),
                         "0",
                         "API key not found",
-                         "3"
+                         $rand
                     );
 
                     wpme_simple_log_2(
@@ -5294,7 +5328,7 @@ add_action(
                      (array) $cartOrder->getPayload(),
                     "0",
                     "API not found",
-                    "3"
+                   $rand
                 ); 
             }
             }
@@ -5356,6 +5390,7 @@ function woocommerce_activity_stream_types()
     }
 
     try {
+        global $wpdb;
         $api->setStreamTypes([
             ["name" => "viewed product", "description" => ""],
 
@@ -5417,6 +5452,25 @@ function woocommerce_activity_stream_types()
                 "description" => "",
             ],
         ]);
+        
+        
+            $ordersql = "CREATE TABLE {$wpdb->prefix}genooqueue (
+            id int(11) unsigned not null auto_increment,
+            order_id int(11) unsigned  null,
+            subscription_id int(8) unsigned  null,
+            order_activitystreamtypes varchar(255) null,
+            payload  Text(500) null,
+            order_payload Text(500) null,
+            description  varchar(255) null,
+            active_type int(11) null,
+            status mediumint(8) unsigned  null,
+            order_datetime  varchar(250) null,
+            type varchar(20) null,
+            PRIMARY KEY  (id)) $charset_collate;";
+            dbDelta($ordersql);
+        
+        
+        
     } catch (\Exception $e) {
         // Decide later Sub Renewal Failed
     }
