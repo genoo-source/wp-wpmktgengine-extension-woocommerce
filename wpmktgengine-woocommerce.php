@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.41
+ Version: 1.7.42
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -5531,6 +5531,11 @@ function woocommerce_activity_stream_types()
             type varchar(20) null,
             PRIMARY KEY  (id)) $charset_collate;";
         dbDelta($ordersql);
+
+        $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
+        ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
+ 
+             $wpdb->query($api_queue);
 
 
 
