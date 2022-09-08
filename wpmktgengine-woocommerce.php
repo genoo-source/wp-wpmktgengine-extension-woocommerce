@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.40
+ Version: 1.7.41
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -465,6 +465,16 @@ add_action(
                 )
                 );
 
+                 wp_enqueue_script(
+                        "data_tables",
+                        plugins_url(
+                        "/includes/activitystream.js",
+                        __FILE__,
+                    [],
+                        "1.0.0",
+                        true
+                    )
+                    );
                 if ($_GET["page"] == "WPMKTENGINE") {
                     wp_enqueue_style(
                         "tabstyle",
@@ -477,16 +487,7 @@ add_action(
                         plugins_url("/includes/bootsrap.css", __FILE__)
                     );
 
-                    wp_enqueue_script(
-                        "data_tables",
-                        plugins_url(
-                        "/includes/activitystream.js",
-                        __FILE__,
-                    [],
-                        "1.0.0",
-                        true
-                    )
-                    );
+                   
                     wp_enqueue_script(
                         "bootsrapjs",
                         plugins_url(
@@ -511,6 +512,17 @@ add_action(
                         "js_cdn",
                         plugins_url(
                         "/includes/tab.js",
+                        __FILE__,
+                    [],
+                        "1.0.0",
+                        true
+                    )
+                    );
+                  
+                     wp_enqueue_script(
+                        "order_queue_script",
+                        plugins_url(
+                        "/includes/orderqueuescript.js",
                         __FILE__,
                     [],
                         "1.0.0",
@@ -791,6 +803,7 @@ add_action(
                     "SELECT * FROM $tbname WHERE status=0 AND type='failed'"
                 );
 
+                  if(!empty($result)){
                 foreach ($result as $results) {
                     $nestedData = [];
 
@@ -819,6 +832,7 @@ add_action(
                 echo json_encode($json_data);
 
                 wp_die();
+                  }
             }
 
             add_action(
@@ -6040,13 +6054,16 @@ function push_data_into_genoo()
                 }
 
                 $subscription_streamtypes = [
-                    "subscription on hold",
+                     "subscription on hold",
                     "subscription reactivated",
                     "Subscription Pending Cancellation",
                     "subscription completed",
-                    "order refund full",
-                    "order refund partial",
                     "cancelled order",
+                    "subscription expired",
+                    "order refund full",
+                    "completed",
+                    "order on hold",
+                    "pending payment"
                 ];
 
                 if (!in_array($order_label[$i], $subscription_streamtypes)) {
