@@ -5,7 +5,7 @@ Requires at least: 3.3
 Tested up to: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.4
+Stable tag: 1.7.40
 
 Understand how your leads and customers are participating with your ecommerce.
 
@@ -43,7 +43,7 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 == Changelog ==
 
-= 1.7.4 = 
+= 1.7.40 = 
 Added Order Queue if order fails to find Genoo API (i.e. if it's down) and will retry the push to Genoo account on regular increment.  Cron job is set to run every 5 mniutes by default, and can be edited at Settings > eCommerce tab in Genoo plugin.  Also added ability to push individual orders across if they have not yet synced with Genoo account.  Go to Edit order and send to genoo button should be available.
 
 = 1.7.0 =
