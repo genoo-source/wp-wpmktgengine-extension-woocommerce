@@ -5,7 +5,7 @@ Requires at least: 3.3
 Tested up to: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.44
+Stable tag: 1.7.45
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.45 ==
+Fixed the issue of subscription on-hold duplicating while inserting into the order queue table.
 
 == 1.7.44 ==
 Fixed the issue of subscription renewal order duplicating while inserting into the order queue table.

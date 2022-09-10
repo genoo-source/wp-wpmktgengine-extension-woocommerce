@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.44
+ Version: 1.7.45
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -3720,10 +3720,9 @@ add_action(
         
         $rand = rand();
 
-        if (!$getrenewal):
-        
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
-      
+       
+        if (!$getrenewal):
             
             if (function_exists("wcs_get_subscriptions_for_order")):
                 $subscriptions_ids = wcs_get_subscriptions_for_order(
