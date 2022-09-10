@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.43
+ Version: 1.7.44
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -3719,6 +3719,8 @@ add_action(
         $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
         
         $rand = rand();
+
+        if (!$getrenewal):
         
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
       
@@ -3796,7 +3798,7 @@ add_action(
             if (isset($WPME_API) && !empty($id)) {
 
                 try {
-                    if (!$getrenewal):
+                    
                     $WPME_API->updateCart(
                         $cartOrder->id,
                         (array)$cartOrder->getPayload()
@@ -3807,7 +3809,7 @@ add_action(
                         ' : WOO ID : ' .
                         $order_id
                     );
-                      endif;
+                     
                 }
                 catch (\Exception $e) {
                     wpme_simple_log_2(
@@ -3875,7 +3877,7 @@ add_action(
 
                 }
             }
-      
+        endif;
     },
     10,
     1
