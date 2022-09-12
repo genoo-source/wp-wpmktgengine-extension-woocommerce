@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.45
+ Version: 1.7.46
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -5541,7 +5541,15 @@ function woocommerce_activity_stream_types()
         ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
  
              $wpdb->query($api_queue);
+             
+             
+     $option = get_option("WPME_ECOMMERCE", []);
 
+                // Save option
+                $option["genooLeadUsercustomer"] = $activeLeadType;
+                $option["cronsetup"] = '5';
+
+                update_option("WPME_ECOMMERCE", $option);
 
 
     }
