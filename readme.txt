@@ -5,7 +5,7 @@ Requires at least: 3.3
 Tested up to: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.46
+Stable tag: 1.7.47
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.47 ==
+Fixed the jquery conflict issue while Failed orders data table display.
 
 == 1.7.46 ==
 Stored cron default setup values in database table.

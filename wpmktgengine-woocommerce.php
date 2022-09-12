@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.46
+ Version: 1.7.47
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -268,7 +268,7 @@ register_activation_hook(__FILE__, function () {
             dbDelta($ordersql);
 
 
-            $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
+      $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
        ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
 
             $wpdb->query($api_queue);
@@ -475,7 +475,7 @@ add_action(
                         true
                     )
                     );
-                if ($_GET["page"] == "WPMKTENGINE") {
+                if ($_GET["page"] == "WPMKTENGINE" || $_GET["page"] == "Genoo") {
                     wp_enqueue_style(
                         "tabstyle",
 
@@ -487,27 +487,7 @@ add_action(
                         plugins_url("/includes/bootsrap.css", __FILE__)
                     );
 
-                   
-                    wp_enqueue_script(
-                        "bootsrapjs",
-                        plugins_url(
-                        "/includes/ajaxjquery.js",
-                        __FILE__,
-                    [],
-                        "1.0.0",
-                        true
-                    )
-                    );
-                    wp_enqueue_script(
-                        "jqueryjs",
-                        plugins_url(
-                        "/includes/jquery.js",
-                        __FILE__,
-                    [],
-                        "1.0.0",
-                        true
-                    )
-                    );
+                  
                     wp_enqueue_script(
                         "js_cdn",
                         plugins_url(
@@ -562,9 +542,8 @@ add_action(
                     echo '<script type="text/javascript">jQuery(function(){ jQuery(".postboxwoocommerceproductsimport .button").click(); });</script>';
                 }
 
-                echo '<script src="https://code.jquery.com/jquery-3.5.1.js"></script>';
-                echo '<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>';
-                echo '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">';
+               echo '<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>';
+               echo '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">';
             }
                 ,
                 10,
