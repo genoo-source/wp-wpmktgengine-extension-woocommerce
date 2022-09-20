@@ -151,9 +151,8 @@ table.desin tr td,table.desn tr td {
     grid-gap: 20px;
 }
 button.pushalltogenoo {
-    float: left;
-    width: auto;
-    margin-top: 15px;
+  width: auto;
+  margin-top: 15px;
 }
 .form-table th{
   width:100px !important;
