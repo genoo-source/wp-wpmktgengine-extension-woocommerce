@@ -3938,7 +3938,7 @@ function enable_processing_to_on_hold_notification($order_id, $order)
 }
 add_action(
     'woocommerce_subscription_payment_complete',
-        function ($subscription) use ($api) {
+        function ($subscription) {
         global $WPME_API;
         $leadType = wpme_get_customer_lead_type();
         $id = get_post_meta($subscription->id, WPMKTENGINE_ORDER_KEY, true);
