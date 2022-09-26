@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.47
+ Version: 1.7.48
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -268,7 +268,7 @@ register_activation_hook(__FILE__, function () {
             dbDelta($ordersql);
 
 
-      $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
+            $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
        ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
 
             $wpdb->query($api_queue);
@@ -465,16 +465,16 @@ add_action(
                 )
                 );
 
-                 wp_enqueue_script(
-                        "data_tables",
-                        plugins_url(
-                        "/includes/activitystream.js",
-                        __FILE__,
-                    [],
-                        "1.0.0",
-                        true
-                    )
-                    );
+                wp_enqueue_script(
+                    "data_tables",
+                    plugins_url(
+                    "/includes/activitystream.js",
+                    __FILE__,
+                [],
+                    "1.0.0",
+                    true
+                )
+                );
                 if ($_GET["page"] == "WPMKTENGINE" || $_GET["page"] == "Genoo") {
                     wp_enqueue_style(
                         "tabstyle",
@@ -487,7 +487,7 @@ add_action(
                         plugins_url("/includes/bootsrap.css", __FILE__)
                     );
 
-                  
+
                     wp_enqueue_script(
                         "js_cdn",
                         plugins_url(
@@ -498,8 +498,8 @@ add_action(
                         true
                     )
                     );
-                  
-                     wp_enqueue_script(
+
+                    wp_enqueue_script(
                         "order_queue_script",
                         plugins_url(
                         "/includes/orderqueuescript.js",
@@ -542,8 +542,8 @@ add_action(
                     echo '<script type="text/javascript">jQuery(function(){ jQuery(".postboxwoocommerceproductsimport .button").click(); });</script>';
                 }
 
-               echo '<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>';
-               echo '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">';
+                echo '<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>';
+                echo '<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">';
             }
                 ,
                 10,
@@ -782,36 +782,36 @@ add_action(
                     "SELECT * FROM $tbname WHERE status=0 AND type='failed'"
                 );
 
-                  if(!empty($result)){
-                foreach ($result as $results) {
-                    $nestedData = [];
+                if (!empty($result)) {
+                    foreach ($result as $results) {
+                        $nestedData = [];
 
-                    $nestedData[] = $results->order_id;
-                    $nestedData[] = $results->subscription_id;
-                    $nestedData[] = $results->order_activitystreamtypes;
-                    $nestedData[] = $results->description;
-                    $nestedData[] = $results->status;
-                    $nestedData[] = $results->order_datetime;
-                    $nestedData[] =
-                        '<input type="checkbox" datasubid= "' . $results->subscription_id . '" class="checkbox" name= "' . $results->order_activitystreamtypes . '" id = "' .
-                        $results->order_id .
-                        '" />';
-                    $data[] = $nestedData;
+                        $nestedData[] = $results->order_id;
+                        $nestedData[] = $results->subscription_id;
+                        $nestedData[] = $results->order_activitystreamtypes;
+                        $nestedData[] = $results->description;
+                        $nestedData[] = $results->status;
+                        $nestedData[] = $results->order_datetime;
+                        $nestedData[] =
+                            '<input type="checkbox" datasubid= "' . $results->subscription_id . '" class="checkbox" name= "' . $results->order_activitystreamtypes . '" id = "' .
+                            $results->order_id .
+                            '" />';
+                        $data[] = $nestedData;
+                    }
+                    $totaldata = count($data);
+
+                    $json_data = [
+                        "draw" => intval($request["draw"]),
+                        "data" => $data,
+                        "recordsTotal" => intval($totaldata),
+                        "recordsFiltered" => intval($totaldata),
+                        "data" => $data,
+                    ];
+
+                    echo json_encode($json_data);
+
+                    wp_die();
                 }
-                $totaldata = count($data);
-
-                $json_data = [
-                    "draw" => intval($request["draw"]),
-                    "data" => $data,
-                    "recordsTotal" => intval($totaldata),
-                    "recordsFiltered" => intval($totaldata),
-                    "data" => $data,
-                ];
-
-                echo json_encode($json_data);
-
-                wp_die();
-                  }
             }
 
             add_action(
@@ -2354,7 +2354,7 @@ add_action(
                 1
             );
 
-     /**
+            /**
      * Order Refunded
      */
 
@@ -2870,7 +2870,7 @@ add_action(
 
             // Not used yet
             add_action("delete_post", function ($post_id) { }
-                , 10, 1);
+                    , 10, 1);
 
                 add_action("woocommerce_check_new_order_items", function () { }
                 );
@@ -2906,7 +2906,7 @@ add_action(
                 );
 
                 add_action("woocommerce_cart_emptied", function () { }
-                , 10, 1);
+                    , 10, 1);
 
                 add_action("woocommerce_checkout_update_user_meta", function () { }
                 );
@@ -3469,7 +3469,7 @@ function wpme_fire_activity_stream(
 
     $activityDescription = "",
 
-    $activityURL = ""    )
+    $activityURL = "")
 {
     wpme_on_wpme_api_set();
 
@@ -3526,7 +3526,7 @@ function wpme_get_order_stream_decipher(
     \WC_Order $order,
     &$cartOrder,
 
-    $givenOrderStatus = false    )
+    $givenOrderStatus = false)
 {
     /**
      * Order Status Change - Regular Order
@@ -3696,13 +3696,13 @@ add_action(
         // Genoo order ID
     
         $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-        
+
         $rand = rand();
 
         $getrenewal = get_post_meta($order_id, '_subscription_renewal', true);
-       
+
         if (!$getrenewal):
-            
+
             if (function_exists("wcs_get_subscriptions_for_order")):
                 $subscriptions_ids = wcs_get_subscriptions_for_order(
                     $order_id,
@@ -3711,7 +3711,7 @@ add_action(
                 ]
                 );
             endif;
-            
+
             $order = new \WC_Order($order_id);
 
             foreach ($subscriptions_ids as $subscriptions_id) {
@@ -3776,7 +3776,7 @@ add_action(
             if (isset($WPME_API) && !empty($id)) {
 
                 try {
-                    
+
                     $WPME_API->updateCart(
                         $cartOrder->id,
                         (array)$cartOrder->getPayload()
@@ -3787,7 +3787,7 @@ add_action(
                         ' : WOO ID : ' .
                         $order_id
                     );
-                     
+
                 }
                 catch (\Exception $e) {
                     wpme_simple_log_2(
@@ -5518,17 +5518,17 @@ function woocommerce_activity_stream_types()
 
         $api_queue = "ALTER TABLE {$wpdb->prefix}genooqueue
         ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
- 
-             $wpdb->query($api_queue);
-             
-             
-     $option = get_option("WPME_ECOMMERCE", []);
 
-                // Save option
-                $option["genooLeadUsercustomer"] = $activeLeadType;
-                $option["cronsetup"] = '5';
+        $wpdb->query($api_queue);
 
-                update_option("WPME_ECOMMERCE", $option);
+
+        $option = get_option("WPME_ECOMMERCE", []);
+
+        // Save option
+        $option["genooLeadUsercustomer"] = $activeLeadType;
+        $option["cronsetup"] = '5';
+
+        update_option("WPME_ECOMMERCE", $option);
 
 
     }
@@ -5562,7 +5562,7 @@ function apivalidate(
     $order_payload,
     $status,
     $description,
-    $active_type    )
+    $active_type)
 {
     global $wpdb;
 
@@ -5588,6 +5588,13 @@ function apivalidate(
             "type" => "failed",
             "active_type" => $active_type
         ]);
+
+
+
+
+
+
+
 
 
     
@@ -5649,7 +5656,7 @@ function sample_admin_notice_woocommerce_success()
 
             <p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p>
 
-            <p>WooCommerce extension has been updated. Update the woocommerce extension activity stream types.</p>
+            <p>WooCommerce extension has been updated. Update the woocommerce extension order queue for Wpme/Genoo plugins.</p>
 
         </span>
 
@@ -5695,10 +5702,10 @@ function order_status_update()
 
 function push_data_into_genoo()
 {
-    global $WPME_API,$wpdb;
+    global $WPME_API, $wpdb;
 
     $checkboxes = $_REQUEST["order_id"];
- $table_data = $wpdb->prefix . "genooqueue";
+    $table_data = $wpdb->prefix . "genooqueue";
     foreach ($checkboxes as $checkbox) {
         $order_ids[] = $checkbox["label"];
         $order_label[] = $checkbox["labelvalue"];
@@ -5706,171 +5713,169 @@ function push_data_into_genoo()
     }
     $i = 0;
     foreach ($order_ids as $order_id) {
-        
-      $subscription_id =  $subscription_ids[$i];
-        
-    $get_all_queue_records = $wpdb->get_results("select * from $table_data where `order_id`=$order_id and `subscription_id`=$subscription_id and `status`=0");
-   
-    foreach($get_all_queue_records as $get_all_queue_record)
-    {
-     
-     $order_id = $get_all_queue_record->order_id;
-    
-    $getpayload = json_decode($get_all_queue_record->payload);
-    
-    $orderpayload = json_decode($get_all_queue_record->order_payload);
-    
-    $order = new \WC_Order($order_id);
 
-    
-     if (method_exists($WPME_API, 'callCustom')):
-        try {
-            // Make a POST request, to Genoo / WPME api, for that rest endpoint
-                $subscription_streamtypes = [
-                    "subscription on hold",
-                    "subscription reactivated",
-                    "Subscription Pending Cancellation",
-                    "subscription completed",
-                    "cancelled order",
-                    "subscription expired",
-                    "order refund full",
-                    "completed",
-                    "order on hold",
-                    "pending payment"
-                
-                 ];
-                $subscription_item_values = ['subscription started','subscription Renewal','new order'];
-                
-                $failed_order_values = ['sub payment failed','sub renewal failed','payment failed'];
-                
-                
-                $order_update_options = array_merge($subscription_streamtypes,$failed_order_values);
-                
+        $subscription_id = $subscription_ids[$i];
 
-    if (!in_array($get_all_queue_record->order_activitystreamtypes, $subscription_streamtypes)) {
-        
-             $getpayload->first_name = $order->get_billing_first_name();
-             $getpayload->last_name = $order->get_billing_last_name();
-                      
-            
-            $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
-            
-          //   if($passorders->order_id){
-                 
-                 if(in_array($get_all_queue_record->order_activitystreamtypes,$subscription_item_values)){
-                  $orderpayload->financial_status = 'paid';
-                  
-                  switch($get_all_queue_record->order_activitystreamtypes)
-                  {
-                  case "subscription started":
-                  $orderpayload->order_status = 'subpayment';
-                  break;
-                  case "subscription Renewal":
-                  $orderpayload->order_status = 'subrenewal';
-                  break;
-                  }
-                 }
-                 
-                  if(!in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
-               $result = $WPME_API->updateCart($passorders->order_id,$orderpayload);
-               
-               if(!in_array($get_all_queue_record->order_activitystreamtypes,$order_update_options))
-           update_post_meta($order_id,'wpme_order_id',$passorders->order_id);
-                  }
-       //}
-    }
-    if($get_all_queue_record->order_activitystreamtypes=='cancelled order')
-    {
-        $cancel_order_id = get_post_meta($order_id,'wpme_order_id',true);
-        
-         $result = $WPME_API->updateCart($cancel_order_id,$orderpayload);
-         
+        $get_all_queue_records = $wpdb->get_results("select * from $table_data where `order_id`=$order_id and `subscription_id`=$subscription_id and `status`=0");
 
-     
-    }
-        $subscription_product_name = get_wpme_subscription_activity_name(
-                    $order_id
-                );
-                $subscription_product_name_values = implode(
-                    "," . " ",
-                    $subscription_product_name
-                );
-                  $genoo_ids = get_post_meta(
+        foreach ($get_all_queue_records as $get_all_queue_record) {
+
+            $order_id = $get_all_queue_record->order_id;
+
+            $getpayload = json_decode($get_all_queue_record->payload);
+
+            $orderpayload = json_decode($get_all_queue_record->order_payload);
+
+            $order = new \WC_Order($order_id);
+
+
+            if (method_exists($WPME_API, 'callCustom')):
+                try {
+                    // Make a POST request, to Genoo / WPME api, for that rest endpoint
+                    $subscription_streamtypes = [
+                        "subscription on hold",
+                        "subscription reactivated",
+                        "Subscription Pending Cancellation",
+                        "subscription completed",
+                        "cancelled order",
+                        "subscription expired",
+                        "order refund full",
+                        "completed",
+                        "order on hold",
+                        "pending payment"
+
+                    ];
+                    $subscription_item_values = ['subscription started', 'subscription Renewal', 'new order'];
+
+                    $failed_order_values = ['sub payment failed', 'sub renewal failed', 'payment failed'];
+
+
+                    $order_update_options = array_merge($subscription_streamtypes, $failed_order_values);
+
+
+                    if (!in_array($get_all_queue_record->order_activitystreamtypes, $subscription_streamtypes)) {
+
+                        $getpayload->first_name = $order->get_billing_first_name();
+                        $getpayload->last_name = $order->get_billing_last_name();
+
+
+                        $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
+
+                        //   if($passorders->order_id){
+
+                        if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
+                            $orderpayload->financial_status = 'paid';
+
+                            switch ($get_all_queue_record->order_activitystreamtypes) {
+                                case "subscription started":
+                                    $orderpayload->order_status = 'subpayment';
+                                    break;
+                                case "subscription Renewal":
+                                    $orderpayload->order_status = 'subrenewal';
+                                    break;
+                            }
+                        }
+
+                        if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
+                            $result = $WPME_API->updateCart($passorders->order_id, $orderpayload);
+
+                            if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
+                                update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);
+                        }
+                    //}
+                    }
+                    if ($get_all_queue_record->order_activitystreamtypes == 'cancelled order') {
+                        $cancel_order_id = get_post_meta($order_id, 'wpme_order_id', true);
+
+                        $result = $WPME_API->updateCart($cancel_order_id, $orderpayload);
+
+
+
+                    }
+                    $subscription_product_name = get_wpme_subscription_activity_name(
+                        $order_id
+                    );
+                    $subscription_product_name_values = implode(
+                        "," . " ",
+                        $subscription_product_name
+                    );
+                    $genoo_ids = get_post_meta(
                         $order_id,
                         "wpme_order_id",
                         true
                     );
-                    
-                 $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
-                 
 
-              
-                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal')
-                {
-                   wpme_fire_activity_stream(
-                    $genoo_lead_id,
-                    $get_all_queue_record->order_activitystreamtypes,
-                    $subscription_product_name_values,  // Title  $order->parent_id
-                    $subscription_product_name_values, // Content
-                    " "
-                    // Permalink
-                );
+                    $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
+
+
+
+                    if ($get_all_queue_record->order_activitystreamtypes != 'subscription Renewal') {
+                        wpme_fire_activity_stream(
+                            $genoo_lead_id,
+                            $get_all_queue_record->order_activitystreamtypes,
+                            $subscription_product_name_values, // Title  $order->parent_id
+                            $subscription_product_name_values, // Content
+                            " "
+                            // Permalink
+                        );
                     }
-                    
-                  if($result==true || $genoo_lead_id){
-                      
-                    
-                    $wpdb->update(
-                    $genoomem_genooqueue,
-                    [
-                        "status" => 1,
-                    ],
-                    [
-                        "order_id" => $order_id,
-                      "order_activitystreamtypes" =>  $get_all_queue_record->order_activitystreamtypes
-                    ]
-        );
-                 }
-                if(in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
-                    
-                    $cartAddress = $order->get_address("billing");
-   
+
+                    if ($result == true || $genoo_lead_id) {
+
+
+                        $wpdb->update(
+                            $genoomem_genooqueue,
+                        [
+                            "status" => 1,
+                        ],
+                        [
+                            "order_id" => $order_id,
+                            "order_activitystreamtypes" => $get_all_queue_record->order_activitystreamtypes
+                        ]
+                        );
+                    }
+                    if (in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
+
+                        $cartAddress = $order->get_address("billing");
+
                         $email = $cartAddress['email'];
-                    
-                     $lead = $WPME_API->getLeadByEmail($email);
-                     
-                   if(!empty($lead))
-                     {
+
+                        $lead = $WPME_API->getLeadByEmail($email);
+
+                        if (!empty($lead)) {
                             $wpdb->update(
-                    $genoomem_genooqueue,
-                    [
-                        "status" => 1,
-                    ],
-                    [
-                        "order_id" => $order_id,
-                      "order_activitystreamtypes" =>  $get_all_queue_record->order_activitystreamtypes
-                    ]
-        );
-                     }
-                  }
-       }catch (Exception $e) {
-            if ($WPME_API->http->getResponseCode() == 404):
-             // Looks like orders not found
+                                $genoomem_genooqueue,
+                            [
+                                "status" => 1,
+                            ],
+                            [
+                                "order_id" => $order_id,
+                                "order_activitystreamtypes" => $get_all_queue_record->order_activitystreamtypes
+                            ]
+                            );
+                        }
+                    }
+                }
+                catch (Exception $e) {
+                    if ($WPME_API->http->getResponseCode() == 404):
+                    // Looks like orders not found
+                    endif;
+                }
             endif;
+
         }
-   endif;
-   
+        $i++;
     }
-     $i++;
 }
-}
-function custom_logs($message) { 
-    if(is_array($message)) { 
-        $message = json_encode($message); 
-    } 
-    $file = fopen("../custom_logs.log","a"); 
-    echo fwrite($file, "\n" . date('Y-m-d h:i:s') . " :: " . $message); 
-    fclose($file); 
+function custom_logs($message)
+{
+    if (is_array($message)) {
+        $message = json_encode($message);
+    }
+    $file = fopen("../custom_logs.log", "a");
+    echo fwrite($file, "\n" . date('Y-m-d h:i:s') . " :: " . $message);
+    fclose($file);
+
 }
 // Adding Meta container admin shop_order pages
 add_action('add_meta_boxes', 'mv_add_meta_boxes');
@@ -5916,7 +5921,7 @@ if (!function_exists('mv_save_wc_order_other_fields'))
 
         // We need to verify this with the proper authorization (security stuff).
 
-           global $WPME_API;
+        global $WPME_API;
 
         if (isset($_POST['adminpushalltogenoo'])) {
             $order_id = $post_id;
@@ -5927,7 +5932,7 @@ if (!function_exists('mv_save_wc_order_other_fields'))
 
             $cartAddress2 = $order->get_address("shipping");
 
-        if (isset($WPME_API) &&
+            if (isset($WPME_API) &&
             isset(WC()->session->{ WPMKTENGINE_ORDER_KEY}) &&
             \WPME\Helper::canContinue()
             ) {
