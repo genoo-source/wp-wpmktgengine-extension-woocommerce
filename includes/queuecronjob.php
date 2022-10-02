@@ -187,8 +187,4 @@ function send_queue_record_details()
     endif;
   }
 }
-
-
-
-?>
 ?>
