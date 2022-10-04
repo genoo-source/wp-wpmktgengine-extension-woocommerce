@@ -5867,16 +5867,6 @@ function push_data_into_genoo()
         $i++;
     }
 }
-function custom_logs($message)
-{
-    if (is_array($message)) {
-        $message = json_encode($message);
-    }
-    $file = fopen("../custom_logs.log", "a");
-    echo fwrite($file, "\n" . date('Y-m-d h:i:s') . " :: " . $message);
-    fclose($file);
-
-}
 // Adding Meta container admin shop_order pages
 add_action('add_meta_boxes', 'mv_add_meta_boxes');
 if (!function_exists('mv_add_meta_boxes')) 
