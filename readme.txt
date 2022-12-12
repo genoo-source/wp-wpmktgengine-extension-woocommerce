@@ -1,11 +1,11 @@
 === WooCommerce - WPMktgEngine | Genoo Extension ===
 Contributors: Genoo, latorante
 Tags: marketing automation, email marketing, lead capture forms
-Requires at least: 3.3
+Requires at least: 5.3.1
 Tested up to: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.47
+Stable tag: 1.7.48
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -14,9 +14,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 = Requirements =
 
-1. Wordpress at least version 3.3
-2. PHP at least version 5.3.1
-3. Active WPMktgEngine account (http://wpmktgengine.com)
+1. Wordpress at least version 5.3.1
+2. PHP at least version 7.4
+3. Active WPMktgEngine account (http://wpmktgengine.com) or Genoo account (https://genoo.com).
 
 == Installation ==
 
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.48 ==
+Changed order status on the failed order queue.
 
 == 1.7.47 ==
 Fixed the jquery conflict issue while Failed orders data table display.
