@@ -84,39 +84,36 @@ function send_queue_record_details()
             
             $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
             
-          //   if($passorders->order_id){
-                 
-                 if(in_array($get_all_queue_record->order_activitystreamtypes,$subscription_item_values)){
-                  $orderpayload->financial_status = 'paid';
-                  
-                  switch($get_all_queue_record->order_activitystreamtypes)
-                  {
-                  case "subscription started":
-                  $orderpayload->order_status = 'subpayment';
-                  break;
-                  case "subscription Renewal":
-                  $orderpayload->order_status = 'subrenewal';
-                  break;
-                  }
-                 }
-                 
-                  if(!in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
-               $result = $WPME_API->updateCart($passorders->order_id,$orderpayload);
-               
-               if(!in_array($get_all_queue_record->order_activitystreamtypes,$order_update_options))
-           update_post_meta($order_id,'wpme_order_id',$passorders->order_id);
-                  }
-       //}
-    }
-    if($get_all_queue_record->order_activitystreamtypes=='cancelled order')
-    {
-        $cancel_order_id = get_post_meta($order_id,'wpme_order_id',true);
         
-         $result = $WPME_API->updateCart($cancel_order_id,$orderpayload);
-         
+	   if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
+            $orderpayload->financial_status = 'paid';
 
-     
-    }
+            switch ($get_all_queue_record->order_activitystreamtypes) {
+              case "subscription started":
+                    $orderpayload->order_status = 'subpayment';
+                    break;
+              case "subscription Renewal":
+                    $orderpayload->order_status = 'subrenewal';
+                    break;
+              case "new order":
+                  $orderpayload->order_status = 'order';
+                  break;
+            }
+          }
+
+          if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
+            $result = $WPME_API->updateCart($passorders->order_id, $orderpayload);
+
+            if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
+              update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);
+          }
+       
+        }
+        if ($get_all_queue_record->order_activitystreamtypes == 'cancelled order') {
+          $cancel_order_id = get_post_meta($order_id, 'wpme_order_id', true);
+
+          $result = $WPME_API->updateCart($cancel_order_id, $orderpayload);
+            }
         $subscription_product_name = get_wpme_subscription_activity_name(
                     $order_id
                 );
