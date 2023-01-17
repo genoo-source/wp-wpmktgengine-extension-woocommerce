@@ -5,7 +5,7 @@ Requires at least: 5.3.1
 Tested up to: 6.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.48
+Stable tag: 1.7.49
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.49 ==
+Fixed the undefined function dbDelta() issue.
 
 == 1.7.48 ==
 Changed order status on the failed order queue.

@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.48
+ Version: 1.7.49
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -89,6 +89,8 @@ function wpme_on_wpme_api_set()
 register_activation_hook(__FILE__, function () {
     global $wpdb;
     // Basic extension data
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
     $fileFolder = basename(dirname(__FILE__));
 
     $file = basename(__FILE__);
