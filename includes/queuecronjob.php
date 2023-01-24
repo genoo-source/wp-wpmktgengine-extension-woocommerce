@@ -4,10 +4,12 @@ function my_cron_schedules($schedules)
 {
 $corn_settings = get_option('WPME_ECOMMERCE');  
 
+$corn_settings_setup = isset($corn_settings['cronsetup']) ? $corn_settings['cronsetup'] : '';
+
     if(!isset($schedules["pertime"])){
       
    $schedules["pertime"] = [
-        "interval" => $corn_settings['cronsetup'] * 60,
+        "interval" => $corn_settings_setup * 60,
         "display" => __("Once every 1 minutes"),
       ];
   }

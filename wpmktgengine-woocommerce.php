@@ -5,7 +5,7 @@
  Author:  Genoo, LLC
  Author URI: http://www.genoo.com/
  Author Email: info@genoo.com
- Version: 1.7.48
+ Version: 1.7.49
  License: GPLv2
  WC requires at least: 3.0.0
  WC tested up to: 5.2.3 */
@@ -89,6 +89,11 @@ function wpme_on_wpme_api_set()
 register_activation_hook(__FILE__, function () {
     global $wpdb;
     // Basic extension data
+
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+
+
     $fileFolder = basename(dirname(__FILE__));
 
     $file = basename(__FILE__);
@@ -573,42 +578,31 @@ add_action(
             /**
      * Add settings page
      *  - if not already in
+
      */
 
-            add_filter(
-                "wpmktengine_settings_sections",
 
-                function ($sections) {
 
-                global $WPME_API;
+          add_filter('wpmktengine_settings_sections', function ($sections) {
+		    if (is_array($sections) && !empty($sections)) {
+			    $isEcommerce = FALSE;
+			    foreach ($sections as $section) {
+				       $sections_ids[] =  $section['id'];
+			
+		    }
+		    	if(!in_array('WPME_ECOMMERCE',$sections_ids))
+			    {
+				    $sections[] = array(
+				    	'id' => 'WPME_ECOMMERCE',
+				    	'title' => __('Ecommerce', 'wpmktengine')
+				    );
+			    }
+		    }
+		    return $sections;
+	    }
+	    	, 10, 1);
 
-                if (is_array($sections) && !empty($sections)) {
-                    $isEcommerce = false;
 
-                    foreach ($sections as $section) {
-                        if ($section["id"] == "ECOMMERCE") {
-                            $isEcommerce = true;
-
-                            break;
-                        }
-                    }
-
-                    if (!$isEcommerce) {
-                        $sections[] = [
-                            "id" => "WPME_ECOMMERCE",
-
-                            "title" => __("Ecommerce", "wpmktengine"),
-                        ];
-                    }
-                }
-
-                return $sections;
-            }
-                ,
-                10,
-
-                1
-            );
 
             /**
      * Add fields to settings page
@@ -2223,18 +2217,35 @@ add_action(
                                             $e->getMessage()
                                         );
                                     }
+
                                 }
+
                                 else {
+
+
+                                    $cartOrder->startNewOrder();
 
                                     $email = $cartAddress['email'];
 
                                     $lead = $WPME_API->getLeadByEmail($email);
 
+                                    $cartOrder->action = "subrenewal";
+
+                                    $cartOrder->changed->action = "subrenewal";
+
+                                    $cartOrder->order_status = "cart";
+
+                                    $cartOrder->order_status = "subrenewal";
+
+                                    $cartOrder->financial_status = "paid";
+
+
                                     if (empty($lead)) {
-                                        $cartOrder->action = "new cart";
-                                        $cartOrder->changed->action = "new cart";
-                                        $cartOrder->order_status = "cart";
+
                                         $cartOrder->changed->order_status = "cart";
+
+                                        $cartOrder->changed->order_status = "subrenewal";
+
                                         $cartOrder->financial_status = "";
                                         $cartOrder->email_ordered_from = $email;
                                         $cartOrder->changed->email_ordered_from = $email;
@@ -2252,8 +2263,25 @@ add_action(
                                     }
                                 }
                             endif;
-                        endforeach; // Payed!
-                    endif;
+
+                        endforeach; 
+                        
+                       if ($getrenewal && $manual == 'false'):
+
+
+                        $WPME_API->updateCart(
+
+                            $cartOrder->id,
+
+                            (array)$cartOrder->getPayload()
+
+                        );
+                        
+                       // Payed!
+                       endif;
+                 endif;
+
+
                 }
                 );
 
@@ -6147,495 +6175,965 @@ if (!function_exists('mv_add_other_fields_for_packaging'))
     function mv_add_other_fields_for_packaging()
     {
 
-        echo '<div class="admin-button-row admin-push-all"><button type="submit" class="pushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
-
+        echo '<div class="admin-button-row admin-push-all"><button type="button" class="adminpushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
     }
 }
 
 // Save the data of the Meta field
-add_action('save_post', 'mv_save_wc_order_other_fields', 10, 1);
+//add_action('save_post', 'mv_save_wc_order_other_fields', 10, 1);
 if (!function_exists('mv_save_wc_order_other_fields')) 
+
 {
 
-    function mv_save_wc_order_other_fields($post_id)
-    {
 
+
+    function mv_save_wc_order_other_fields()
+
+    {
         // We need to verify this with the proper authorization (security stuff).
 
            global $WPME_API;
 
-        if (isset($_POST['adminpushalltogenoo'])) {
+           $post_id = $_REQUEST['post_id'];
+
             $order_id = $post_id;
+
 
             $order = new \WC_Order($order_id);
 
+
+
             $cartAddress = $order->get_address("billing");
+
+
 
             $cartAddress2 = $order->get_address("shipping");
 
+
+
         if (isset($WPME_API) &&
+
             isset(WC()->session->{ WPMKTENGINE_ORDER_KEY}) &&
+
             \WPME\Helper::canContinue()
+
             ) {
+
                 // Changed, always create new lead and new order
+
+
+
 
 
                 $order_genoo_id = WC()->session->{ WPMKTENGINE_ORDER_KEY};
 
+
+
                 $cartOrder = new \WPME\Ecommerce\CartOrder($order_genoo_id);
+
+
 
                 $cartOrder->setApi($WPME_API);
 
+
+
                 $cartOrder->total_price = $order->get_total();
 
+
+
                 $cartOrder->setBillingAddress(
+
                     $cartAddress["address_1"],
+
+
 
                     $cartAddress["address_2"],
 
+
+
                     $cartAddress["city"],
+
+
 
                     $cartAddress["country"],
 
+
+
                     $cartAddress["phone"],
+
+
 
                     $cartAddress["postcode"],
 
+
+
                     "",
 
+
+
                     $cartAddress["state"]
+
                 );
 
+
+
                 $cartOrder->setShippingAddress(
+
                     $cartAddress2["address_1"],
+
+
 
                     $cartAddress2["address_2"],
 
+
+
                     $cartAddress2["city"],
+
+
 
                     $cartAddress2["country"],
 
+
+
                     $cartAddress2["phone"],
+
+
 
                     $cartAddress2["postcode"],
 
+
+
                     "",
 
+
+
                     $cartAddress2["state"]
+
                 );
+
+
 
                 $cartOrder->order_number = $order_id;
 
+
+
                 $cartOrder->currency = $order->get_order_currency();
+
+
 
                 $cartOrder->setTotal($order->get_total());
 
+
+
                 // Add email and leadType
+
                 //ec_lead_type_id = lead type ID
+
                 //email_ordered_from = email address making the sale
+
                 $leadTYpe = wpme_get_customer_lead_type();
+
+
 
                 $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
 
+
+
                 $cartOrder->changed->ec_lead_type_id = $leadTYpe;
+
+
 
                 $cartOrder->email_ordered_from = $email;
 
+
+
                 $cartOrder->changed->email_ordered_from = $email;
+
+
 
                 $cartOrder->tax_amount = $order->get_total_tax();
 
+
+
                 $cartOrder->changed->tax_amount = $order->get_total_tax();
+
+
 
                 $cartOrder->shipping_amount = $order->get_total_shipping();
 
+
+
                 $cartOrder->changed->shipping_amount = $order->get_total_shipping();
 
+
+
                 // From email
+
                 $cartOrderEmail = \WPME\WooCommerce\Helper::getEmailFromOrder(
+
                     $order_id
+
                 );
 
+
+
                 if ($cartOrderEmail !== false) {
+
                     $cartOrder->email_ordered_from = $cartOrderEmail;
 
+
+
                     $cartOrder->changed->email_ordered_from = $cartOrderEmail;
+
                 }
 
+
+
                 // Order meta
+
                 // Set order meta
+                
                 \update_post_meta(
+
                     $order_id,
+
+
 
                     WPMKTENGINE_ORDER_KEY,
 
+
+
                     $order_genoo_id
+
                 );
 
-                // Remove session id
-
+               // Remove session id
 
                 // Remove session
+
                 unset(WC()->session->{ WPMKTENGINE_ORDER_KEY});
+
             }
+
             elseif (isset($WPME_API)) {
 
+
+
                 $email = $cartAddress['email'];
+
+
 
                 if ($email !== false) {
 
 
+
+
+
                     // Get order & adresses
+
                     $session = WC()->session;
 
+
+
                     @$lead_first = isset($cartAddress["first_name"])
+
                         ? $cartAddress["first_name"]
+
                         : null;
+
+
 
                     @$lead_last = isset($cartAddress["last_name"])
+
                         ? $cartAddress["last_name"]
+
                         : null;
 
+
+
                     if (empty($lead_first) && empty($lead_last)) {
+
                         // If both are empty, try from order?
+
                         @$lead_first = $cartAddress["first_name"];
+
+
 
                         @$lead_last = $cartAddress["last_name"];
 
+
+
                         // If still empty try shipping name?
+
                         if (empty($lead_first) && empty($lead_last)) {
+
                             // If both are empty
+
                             @$lead_first = $cartAddress2["first_name"];
 
+
+
                             @$lead_last = $cartAddress2["last_name"];
+
                         }
+
+
 
                         if (empty($lead_first) && empty($lead_last)) {
+
                             // If both are empty
+
                             @$lead_first = isset(
+
                                 $cartAddress2["first_name"]
+
                                 )
+
                                 ? $cartAddress2["first_name"]
+
                                 : null;
 
+
+
                             @$lead_last = isset($cartAddress2["last_name"])
+
                                 ? $cartAddress2["last_name"]
+
                                 : null;
+
                         }
+
+
+
 
 
                     }
 
 
+
+
+
                     // Lead null for now
+
                     $lead_id = null;
+
+
 
                     try {
 
+
+
                         // Lead exists, ok, set up Lead ID
+
                         // NO lead, create one
+
                         $leadTypeFirst = wpme_get_customer_lead_type();
+
+
+
 
 
                         $leadType = $WPME_API->settingsRepo->getLeadTypeSubscriber();
 
+
+
                         if (
+
                         $leadTypeFirst !== false &&
+
                         !is_null($leadTypeFirst) &&
+
                         is_numeric($leadTypeFirst)
+
                         ) {
+
                             $leadType = $leadTypeFirst;
+
                         }
 
 
 
+
+
+
+
                         $attributes = apply_filters(
+
                             "genoo_wpme_lead_creation_attributes",
 
+
+
                         [
+
                             "organization" => "",
+
+
 
                             "address1" => $cartAddress["address_1"],
 
+
+
                             "address2" => $cartAddress["address_2"],
+
+
 
                             "city" => $cartAddress["city"],
 
+
+
                             "country" => $cartAddress["country"],
+
+
 
                             "zip" => $cartAddress["postcode"],
 
+
+
                             "mobilephone" => $cartAddress["phone"],
 
+
+
                             "source" => "eCommerce Order",
+
                         ],
 
+
+
                             "ecommerce-new-order-lead"
+
                         );
+
+
 
                         wpme_clear_sess();
 
 
 
+
+
+
+
                         $leadNew = $WPME_API->setLead(
+
                             (int)$leadType,
+
+
 
                             $cartAddress["email"],
 
+
+
                             $lead_first,
+
+
 
                             $lead_last,
 
+
+
                             "",
+
+
 
                             true,
 
+
+
                             $attributes
+
                         );
+
+
 
                         $leadNew = (int)$leadNew;
 
+
+
                         if (function_exists("clearRefferalFromSession")) {
+
                             clearRefferalFromSession();
+
                         }
 
+
+
                         if (!is_null($leadNew) && $leadNew > 0) {
+
                             // We have a lead id
+
                             $lead_id = $leadNew;
 
+
+
                             // Set cookie
+
                             \WPME\Helper::setUserCookie($lead_id);
 
 
-                        }
-                        else {
+
+
 
                         }
+
+                        else {
+
+
+
+                        }
+
                     }
+
                     catch (\Exception $e) {
+
+
 
                     //To Do
 
+
+
                     }
 
+
+
                     // 2 Start and order if lead not null
+
                     // 2.1 Set to new order
+
                     if ($lead_id !== null && $lead_id > 0) {
+
                         wpme_simple_log_2(
+
                             "WCUOM-2B-2A-4-1 Lead exists, creating order. lead id: " .
+
                             $lead_id
+
                         );
+
+
 
                         $cart = WC()->cart;
 
+
+
                         $cartContents = \WPME\WooCommerce\VariantCart::convertCartToObject(
+
                             $cart->cart_contents
+
                         );
+
+
 
                         $cartOrder = new \WPME\Ecommerce\CartOrder();
 
+
+
                         $cartOrder->setApi($WPME_API);
+
+
 
                         $cartOrder->setUser($lead_id);
 
+
+
                         // $cartOrder->actionNewOrder();
 
+
+
                         $cartOrder->setBillingAddress(
+
                             $cartAddress["address_1"],
+
+
 
                             $cartAddress["address_2"],
 
+
+
                             $cartAddress["city"],
+
+
 
                             $cartAddress["country"],
 
+
+
                             $cartAddress["phone"],
+
+
 
                             $cartAddress["postcode"],
 
+
+
                             "",
 
+
+
                             $cartAddress["state"]
+
                         );
 
+
+
                         $cartOrder->setShippingAddress(
+
                             $cartAddress2["address_1"],
+
+
 
                             $cartAddress2["address_2"],
 
+
+
                             $cartAddress2["city"],
+
+
 
                             $cartAddress2["country"],
 
+
+
                             $cartAddress2["phone"],
+
+
 
                             $cartAddress2["postcode"],
 
+
+
                             "",
 
+
+
                             $cartAddress2["state"]
+
                         );
+
+
 
                         $cartOrder->order_number = $order_id;
 
+
+
                         $cartOrder->currency = $order->get_order_currency();
+
+
 
                         $cartOrder->total_price = $order->get_total();
 
+
+
                         $cartOrder->setTotal($order->get_total());
+
+
 
                         $wpmeApiOrderItems = [];
 
+
+
                         $get_order = wc_get_order($order_id);
 
+
+
                         foreach ($get_order->get_items() as $item) {
+
                             $changedItemData = $item->get_data();
+
                             // Let's see if this is in
+
                             $id = (int)get_post_meta(
+
                                 $changedItemData["product_id"],
+
                                 WPMKTENGINE_PRODUCT_KEY,
+
                                 true
+
                             );
+
                             if (is_numeric($id) && $id > 0) {
+
                                 $array["product_id"] = $id;
+
                                 $array["quantity"] =
+
                                     $changedItemData["quantity"];
+
                                 $array["total_price"] =
+
                                     $changedItemData["total"];
+
                                 $array["unit_price"] =
+
                                     $changedItemData["total"] /
+
                                     $changedItemData["quantity"];
+
                                 $array["external_product_id"] =
+
                                     $changedItemData["product_id"];
+
                                 $array["name"] = $changedItemData["name"];
+
                                 $wpmeApiOrderItems[] = $array;
+
                             }
+
                         }
+
+
+
 
 
                         $cartOrder->addItemsArray($wpmeApiOrderItems);
 
+
+
                         // Add email and leadType
+
                         //ec_lead_type_id = lead type ID
+
                         //email_ordered_from = email address making the sale
+
                         $leadTYpe = wpme_get_customer_lead_type();
+
+
 
                         $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
 
+
+
                         $cartOrder->changed->ec_lead_type_id = $leadTYpe;
+
+
 
                         $cartOrder->email_ordered_from = $email;
 
+
+
                         $cartOrder->changed->email_ordered_from = $email;
+
+
 
                         $cartOrder->total_price = $order->get_total();
 
+
+
                         $cartOrder->tax_amount = $order->get_total_tax();
+
+
 
                         $cartOrder->changed->tax_amount = $order->get_total_tax();
 
+
+
                         $cartOrder->shipping_amount = $order->get_total_shipping();
+
+
 
                         $cartOrder->changed->shipping_amount = $order->get_total_shipping();
 
+
+
                         // From email
+
                         $cartOrderEmail = \WPME\WooCommerce\Helper::getEmailFromOrder(
+
                             $order_id
+
                         );
+
+
 
                         if ($cartOrderEmail !== false) {
 
+
+
                             $cartOrder->email_ordered_from = $cartOrderEmail;
 
+
+
                             $cartOrder->changed->email_ordered_from = $cartOrderEmail;
+
                         }
+
+
 
                         if ($order->get_status() == 'processing') {
 
+
+
                             $cartOrder->startNewOrder();
+
                             $cartOrder->financial_status = "paid";
 
+
+
                             if (function_exists("wcs_get_subscriptions_for_order")):
+
                                 $subscriptions_ids = wcs_get_subscriptions_for_order(
+
                                     $order_id,
 
+
+
                                 ["order_type" => "any"]
+
                                 );
+
                             endif;
+
+
+
 
 
                             $getrenewal = get_post_meta(
+
                                 $order_id,
+
+
 
                                 "_subscription_renewal",
 
+
+
                                 true
+
                             );
+                            
 
                             $genoo_lead_id = get_wpme_order_lead_id($cartOrder->id);
 
+
+
                             if (!empty($subscriptions_ids) && !$getrenewal):
 
+
+
                                 $subscription_product_name = get_wpme_subscription_activity_name($order_id);
+
                                 $subscription_product_name_values = implode(
+
                                     "," . " ",
+
                                     $subscription_product_name
+
                                 );
+
                                 wpme_fire_activity_stream(
+
                                     $genoo_lead_id,
+
                                     'subscription started',
+
                                     $subscription_product_name_values, // Title  $order->parent_id
+
                                     $subscription_product_name_values, // Content
+
                                     " "
+
                                     // Permalink
+
                                 );
+
+
 
                             endif;
-                        }
-                        else {
 
                         }
+
+                        else {
+
+
+
+                        }
+
+
 
                         // Continue
 
+
+
                         // Set order meta
+
                         \update_post_meta(
+
                             $order_id,
+
+
 
                             WPMKTENGINE_ORDER_KEY,
 
+
+
                             $cartOrder->id
+
                         );
 
+
                         $getrenewal = get_post_meta(
+
                             $order_id,
+
+
 
                             "_subscription_renewal",
 
+
+
                             true
+
                         );
+
+                
+
                         if (!$getrenewal) {
+
                             $cartOrder->order_status = "subpayment";
+
                             $cartOrder->changed->order_status = "subpayment";
+
                         }
+
+
                         else {
+
                             $cartOrder->order_status = "subrenewal";
+
                             $cartOrder->changed->order_status = "subrenewal";
+
                         }
+
+
 
                         $result = $WPME_API->updateCart(
+
                             $cartOrder->id,
+
                             (array)$cartOrder->getPayload()
+
                         );
 
+
+
                         // Remove session id
-                        unset(WC()->session->{ WPMKTENGINE_ORDER_KEY});
+
+                    unset(WC()->session->{ WPMKTENGINE_ORDER_KEY});
+
                     }
+
                 }
+
                 else {
+
                 }
+
             }
 
-        }
+
+
+        
+
     }
+
 }

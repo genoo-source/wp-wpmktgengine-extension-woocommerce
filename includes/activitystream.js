@@ -95,7 +95,29 @@ jQuery(document).on("click",".pushalltogenoo",function()
 
 });
 
+ 
+  jQuery(document).on("click", ".adminpushalltogenoo", function () {
+     let searchParams = new URLSearchParams(window.location.search)
+     searchParams.has('post') // true
+   let param = searchParams.get('post')
 
+       jQuery.ajax({
+    url: ajaxurl,
+    type: "POST",
+    cache: false,
+    data: {
+    action: "mv_save_wc_order_other_fields",
+    'post_id': param
+    },
+    success: function () {
+    jQuery('.adminpushalltogenoo').css('display','none');
+   location.reload();
+     },
+     error: function (errorThrown) {
+         console.log(errorThrown);
+     },
+     });
+  });
 
 
 });
