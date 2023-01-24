@@ -6179,6 +6179,8 @@ if (!function_exists('mv_add_other_fields_for_packaging'))
     }
 }
 
+add_action("wp_ajax_mv_save_wc_order_other_fields","mv_save_wc_order_other_fields");
+
 // Save the data of the Meta field
 //add_action('save_post', 'mv_save_wc_order_other_fields', 10, 1);
 if (!function_exists('mv_save_wc_order_other_fields')) 
