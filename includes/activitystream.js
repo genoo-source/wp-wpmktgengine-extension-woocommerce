@@ -100,7 +100,8 @@ jQuery(document).on("click",".pushalltogenoo",function()
      let searchParams = new URLSearchParams(window.location.search)
      searchParams.has('post') // true
    let param = searchParams.get('post')
-
+   jQuery('.adminpushalltogenoo').css('display','none');
+   jQuery(".loading").show();
        jQuery.ajax({
     url: ajaxurl,
     type: "POST",
@@ -110,8 +111,9 @@ jQuery(document).on("click",".pushalltogenoo",function()
     'post_id': param
     },
     success: function () {
-    jQuery('.adminpushalltogenoo').css('display','none');
-   location.reload();
+        jQuery('.adminpushalltogenoo').css('display','none');
+        jQuery(".loading").hide();
+        location.reload();
      },
      error: function (errorThrown) {
          console.log(errorThrown);
