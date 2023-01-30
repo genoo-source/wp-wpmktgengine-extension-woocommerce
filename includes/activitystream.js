@@ -96,30 +96,31 @@ jQuery(document).on("click",".pushalltogenoo",function()
 });
 
  
-  jQuery(document).on("click", ".adminpushalltogenoo", function () {
-     let searchParams = new URLSearchParams(window.location.search)
-     searchParams.has('post') // true
-   let param = searchParams.get('post')
+jQuery(document).on("click", ".adminpushalltogenoo", function () {
+    let searchParams = new URLSearchParams(window.location.search)
+    searchParams.has('post') // true
+  let param = searchParams.get('post')
+  jQuery('.adminpushalltogenoo').css('display','none');
+  jQuery(".loading").show();
+   jQuery.ajax({
+   url: ajaxurl,
+   type: "POST",
+   cache: false,
+   data: {
+   action: "mv_save_wc_order_other_fields",
+   'post_id': param
+   },
+   success: function () {
    jQuery('.adminpushalltogenoo').css('display','none');
-   jQuery(".loading").show();
-       jQuery.ajax({
-    url: ajaxurl,
-    type: "POST",
-    cache: false,
-    data: {
-    action: "mv_save_wc_order_other_fields",
-    'post_id': param
+   jQuery(".loading").hide();
+
+  location.reload();
     },
-    success: function () {
-        jQuery('.adminpushalltogenoo').css('display','none');
-        jQuery(".loading").hide();
-        location.reload();
-     },
-     error: function (errorThrown) {
-         console.log(errorThrown);
-     },
-     });
-  });
+    error: function (errorThrown) {
+        console.log(errorThrown);
+    },
+    });
+ });
 
 
 });
