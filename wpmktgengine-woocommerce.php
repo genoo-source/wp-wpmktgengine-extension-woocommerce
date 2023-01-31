@@ -5899,7 +5899,8 @@ function push_data_into_genoo()
                 if ($order_label[$i] == "subscription started") {
                     $cartOrder->order_status = "subpayment";
                     $cartOrder->changed->order_status = "subpayment";
-                } elseif ($order_label[$i] == "subscription renewal") {
+                    $cartOrder->financial_status = "paid";
+                    } elseif ($order_label[$i] == "subscription renewal") {
                     $cartOrder->order_status = "subrenewal";
                     $cartOrder->changed->order_status = "subrenewal";
                 }
