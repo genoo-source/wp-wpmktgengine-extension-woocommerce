@@ -719,6 +719,8 @@ add_action(
                                     "attr" => [
                                         "style" => "display: block",
                                         "required" => "required",
+                                        "pattern" => "^(1|[1-9][0-9]*)$"
+
                                     ],
                                 ],
                             ];
