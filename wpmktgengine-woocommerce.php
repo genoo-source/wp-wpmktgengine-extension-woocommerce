@@ -2140,37 +2140,7 @@ add_action(
                                     $cartOrder->id
                                 );
 
-                                try {
-                                    //  wpme_get_order_stream_decipher($order, $cartOrder);
-                                    $cartOrder->order_status = "subrenewal";
-                                    $cartOrder->changed->order_status =
-                                        "subrenewal";
-                                    $cartOrder->financial_status = "paid";
-
-                                    $WPME_API->updateCart(
-                                        $cartOrder->id,
-                                        (array) $cartOrder->getPayload()
-                                    );
-                                    wpme_simple_log_2(
-                                        "UPDATED ORDER to PROCESSING :" .
-                                            $cartOrder->id .
-                                            " : WOO ID : " .
-                                            $order_id
-                                    );
-                                } catch (\Exception $e) {
-                                    wpme_simple_log_2(
-                                        "Processing ORDER, Genoo ID:" .
-                                            $cartOrder->id
-                                    );
-                                    wpme_simple_log_2(
-                                        "FAILED to updated order to PROCESSING :" .
-                                            $id .
-                                            " : WOO ID : " .
-                                            $order_id .
-                                            " : Because : " .
-                                            $e->getMessage()
-                                    );
-                                }
+                           
                             } else {
                                 $cartOrder->startNewOrder();
 
@@ -2210,6 +2180,37 @@ add_action(
                                         $rand
                                     );
                                 }
+                            }
+                            try {
+                                //  wpme_get_order_stream_decipher($order, $cartOrder);
+                                $cartOrder->order_status = "subrenewal";
+                                $cartOrder->changed->order_status =
+                                    "subrenewal";
+                                $cartOrder->financial_status = "paid";
+
+                                $WPME_API->updateCart(
+                                    $cartOrder->id,
+                                    (array) $cartOrder->getPayload()
+                                );
+                                wpme_simple_log_2(
+                                    "UPDATED ORDER to PROCESSING :" .
+                                        $cartOrder->id .
+                                        " : WOO ID : " .
+                                        $order_id
+                                );
+                            } catch (\Exception $e) {
+                                wpme_simple_log_2(
+                                    "Processing ORDER, Genoo ID:" .
+                                        $cartOrder->id
+                                );
+                                wpme_simple_log_2(
+                                    "FAILED to updated order to PROCESSING :" .
+                                        $id .
+                                        " : WOO ID : " .
+                                        $order_id .
+                                        " : Because : " .
+                                        $e->getMessage()
+                                );
                             }
                         endif;
                     endforeach;
