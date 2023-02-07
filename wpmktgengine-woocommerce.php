@@ -2214,16 +2214,6 @@ add_action(
                             }
                         endif;
                     endforeach;
-
-                    if ($getrenewal && $manual == "false"):
-                        $WPME_API->updateCart(
-                            $cartOrder->id,
-
-                            (array) $cartOrder->getPayload()
-                        );
-
-                        // Payed!
-                    endif;
                 endif;
             });
 
