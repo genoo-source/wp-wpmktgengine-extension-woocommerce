@@ -82,14 +82,16 @@ function send_queue_record_details()
         
              $getpayload->first_name = $order->get_billing_first_name();
              $getpayload->last_name = $order->get_billing_last_name();
-                      
-            
+             $getpayload->order_date = "$order->date_created";
+             $getpayload->completed_date = "$order->date_created";
+             $getpayload->order_shipped = "$order->date_created";
+             $getpayload->last_updated = "$order->date_created";
             $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
             
         
 	   if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
             $orderpayload->financial_status = 'paid';
-
+           
             switch ($get_all_queue_record->order_activitystreamtypes) {
               case "subscription started":
                     $orderpayload->order_status = 'subpayment';

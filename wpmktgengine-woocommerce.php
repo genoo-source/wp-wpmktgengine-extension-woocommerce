@@ -6514,15 +6514,29 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
                         true
                     );
 
-                    if (!$getrenewal) {
+                    if (!empty($subscriptions_ids) && !$getrenewal)  {
+
                         $cartOrder->order_status = "subpayment";
 
-                        $cartOrder->changed->order_status = "subpayment";
-                    } else {
-                        $cartOrder->order_status = "subrenewal";
+                       $cartOrder->financial_status = "paid";
 
-                        $cartOrder->changed->order_status = "subrenewal";
-                    }
+                         $cartOrder->changed->order_status = "subpayment";
+
+                          }
+                          
+                           elseif (!empty($subscriptions_ids) && $getrenewal){
+
+                             $cartOrder->order_status = "subrenewal";
+
+                             $cartOrder->changed->order_status = "subrenewal";
+
+                                 } else {
+
+                            $cartOrder->order_status = "order";
+
+                             $cartOrder->changed->order_status = "order";   
+
+                             }
 
                     $result = $WPME_API->updateCart(
                         $cartOrder->id,
