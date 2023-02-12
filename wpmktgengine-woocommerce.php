@@ -5996,26 +5996,6 @@ if (!function_exists("mv_add_meta_boxes")) {
 }
 
 // Adding Meta field in the meta container admin shop_order pages
-if (!function_exists("mv_add_other_fields_for_packaging")) {
-    function mv_add_other_fields_for_packaging()
-    {
-        echo '<div class="admin-button-row admin-push-all"><button type="button" class="adminpushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
-        echo '<div class="loading" style="display:none;">
-        <p><img src= "'.plugins_url(
-                        "includes/images/loading.gif",
-                        __FILE__
-                    ).'";  /></p>
-    </div>';  
-    }
-}
-
-add_action(
-    "wp_ajax_mv_save_wc_order_other_fields",
-    "mv_save_wc_order_other_fields"
-);
-
-// Save the data of the Meta field
-//add_action('save_post', 'mv_save_wc_order_other_fields', 10, 1);
 if (!function_exists("mv_save_wc_order_other_fields")) {
 
     function mv_save_wc_order_other_fields()
@@ -6656,106 +6636,31 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
     
                         $cartOrder->email_ordered_from = $cartOrderEmail;
     
-    
-    
-                        $cartOrder->changed->email_ordered_from = $cartOrderEmail;
+                      $cartOrder->changed->email_ordered_from = $cartOrderEmail;
     
                     }
     
-                    if (!empty($subscriptions_ids) && !$getrenewal)  {
-    
-    
-    
-                        $cartOrder->order_status = "subpayment";
-    
-    
-    
-                         $cartOrder->financial_status = "paid";
-    
-    
-    
-                         $cartOrder->changed->order_status = "subpayment";
-    
-    
-    
-                          }
-    
-                          
-    
-                           elseif (!empty($subscriptions_ids) && $getrenewal){
-    
-    
-    
-                             $cartOrder->order_status = "subrenewal";
-    
-                             $cartOrder->changed->order_status = "subrenewal";
-    
-    
-    
-                                 } else {
-    
-    
-    
-                            $cartOrder->order_status = "order";
-    
-                             $cartOrder->changed->order_status = "order";   
-    
-    
-    
-                        }
-    
-    
-    
-    
-                    if ($order->get_status() == "processing") {
+                  if ($order->get_status() == "processing") {
     
                         //$cartOrder->startNewOrder();
     
+                      $cartOrder->financial_status = "paid";
     
-    
-                        $cartOrder->financial_status = "paid";
-    
-    
-    
-                        if (function_exists("wcs_get_subscriptions_for_order")):
+                 if (function_exists("wcs_get_subscriptions_for_order")):
     
                             $subscriptions_ids = wcs_get_subscriptions_for_order(
     
-                                $order_id,
+                                $order_id, ["order_type" => "any"]);
     
+                endif;
     
+        $getrenewal = get_post_meta($order_id,"_subscription_renewal",true);
     
-                                ["order_type" => "any"]
+         $genoo_lead_id = get_wpme_order_lead_id($cartOrder->id);
     
-                            );
+               if (!empty($subscriptions_ids) && !$getrenewal):
     
-                        endif;
-    
-    
-    
-                        $getrenewal = get_post_meta(
-    
-                            $order_id,
-    
-    
-    
-                            "_subscription_renewal",
-    
-    
-    
-                            true
-    
-                        );
-    
-    
-    
-                        $genoo_lead_id = get_wpme_order_lead_id($cartOrder->id);
-    
-    
-    
-                        if (!empty($subscriptions_ids) && !$getrenewal):
-    
-                            $subscription_product_name = get_wpme_subscription_activity_name(
+                 $subscription_product_name = get_wpme_subscription_activity_name(
     
                                 $order_id
     
