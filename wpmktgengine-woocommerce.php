@@ -5996,6 +5996,26 @@ if (!function_exists("mv_add_meta_boxes")) {
 }
 
 // Adding Meta field in the meta container admin shop_order pages
+if (!function_exists('mv_add_other_fields_for_packaging')) 
+{
+    function mv_add_other_fields_for_packaging()
+    {
+
+        echo '<div class="admin-button-row admin-push-all"><button type="button" class="adminpushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
+        echo '<div class="loading" style="display:none;">
+        <p><img src= "'.plugins_url(
+                        "includes/images/loading.gif",
+                        __FILE__
+                    ).'";  /></p>
+    </div>';  
+    }
+}
+add_action(
+    "wp_ajax_mv_save_wc_order_other_fields",
+    "mv_save_wc_order_other_fields"
+);
+
+// Adding Meta field in the meta container admin shop_order pages
 if (!function_exists("mv_save_wc_order_other_fields")) {
 
     function mv_save_wc_order_other_fields()
