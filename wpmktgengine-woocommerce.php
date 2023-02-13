@@ -6014,6 +6014,10 @@ add_action(
     "wp_ajax_mv_save_wc_order_other_fields",
     "mv_save_wc_order_other_fields"
 );
+add_action(
+    "wp_ajax_nopriv_mv_save_wc_order_other_fields",
+    "mv_save_wc_order_other_fields"
+);
 
 // Adding Meta field in the meta container admin shop_order pages
 if (!function_exists("mv_save_wc_order_other_fields")) {
