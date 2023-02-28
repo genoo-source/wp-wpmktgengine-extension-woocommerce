@@ -101,6 +101,15 @@ jQuery(document).on("click", ".adminpushalltogenoo", function () {
     searchParams.has('post') // true
   let param = searchParams.get('post')
   jQuery('.adminpushalltogenoo').css('display','none');
+  var no_smart_rule_value = parentDiv.find('.no_smart_rule_ind').is(":checked");
+    if(no_smart_rule_value==true)
+    {
+        var no_smart_rule_value_id = 'Y';
+    }
+    else
+    {
+    var no_smart_rule_value_id = 'N';
+   }
   jQuery(".loading").show();
    jQuery.ajax({
    url: ajaxurl,
@@ -108,7 +117,8 @@ jQuery(document).on("click", ".adminpushalltogenoo", function () {
    cache: false,
    data: {
    action: "mv_save_wc_order_other_fields",
-   'post_id': param
+   'post_id': param,
+   'no_smart_rule_value_id':no_smart_rule_value_id
    },
    success: function () {
    jQuery('.adminpushalltogenoo').css('display','none');
