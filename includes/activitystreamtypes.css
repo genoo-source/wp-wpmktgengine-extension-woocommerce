@@ -11,7 +11,10 @@
     position: relative;
     width: 110px;
    }
-
+   .adminoptionpush > .admin-push-all
+   {
+       margin:8px;
+   }
    .wpme-upgrader-custom-notice .notice-left {
        display: table-cell;
        padding: 10px;

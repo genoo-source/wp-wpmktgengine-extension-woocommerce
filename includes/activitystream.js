@@ -97,8 +97,10 @@ jQuery(document).on("click",".pushalltogenoo",function()
 
  
 jQuery(document).on("click", ".adminpushalltogenoo", function () {
-    let searchParams = new URLSearchParams(window.location.search)
-    searchParams.has('post') // true
+    var objectvalue = jQuery(this).closest('.adminoptionpush');
+    var parentDiv=jQuery(objectvalue);
+  let searchParams = new URLSearchParams(window.location.search)
+  searchParams.has('post') // true
   let param = searchParams.get('post')
   jQuery('.adminpushalltogenoo').css('display','none');
   var no_smart_rule_value = parentDiv.find('.no_smart_rule_ind').is(":checked");
@@ -110,7 +112,9 @@ jQuery(document).on("click", ".adminpushalltogenoo", function () {
     {
     var no_smart_rule_value_id = 'N';
    }
-  jQuery(".loading").show();
+     jQuery('.no_smart_rule_ind').css('display','none');
+     jQuery('.no_smart_rule_label').css('display','none');
+   jQuery(".loading").show();
    jQuery.ajax({
    url: ajaxurl,
    type: "POST",

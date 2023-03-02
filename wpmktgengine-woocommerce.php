@@ -6001,17 +6001,18 @@ if (!function_exists('mv_add_other_fields_for_packaging'))
     function mv_add_other_fields_for_packaging()
     {
 
-        echo '<div class="adminoptionpush"><div class="admin-button-row admin-push-all"><button type="button" class="adminpushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
-        echo '<div class="loading" style="display:none;">
-        <p><img src= "'.plugins_url(
-                        "includes/images/loading.gif",
-                        __FILE__
-                    ).'";  /></p>
-    </div>';  
-    echo '<div>
-    <input type="checkbox" id="no_smart_rule_ind" name="no_smart_rule_ind" class="no_smart_rule_ind" checked >
-    <label for="no_smart_rule_ind">Do Not Process Smart Rules on Order Push</label>
-  </div></div>';
+        echo '<div class="adminoptionpush"><div>
+        <input type="checkbox" id="no_smart_rule_ind" name="no_smart_rule_ind" class="no_smart_rule_ind" checked >
+        <label for="no_smart_rule_ind" class="no_smart_rule_label">Do Not Process Smart Rules on Order Push</label>
+      </div>';
+      echo '<div class="admin-button-row admin-push-all"><button type="button" class="adminpushalltogenoo" name="adminpushalltogenoo" value="adminpushalltogenoo">Push To Genoo/WPMKTGENGINE</button></div>';
+            echo '<div class="loading" style="display:none;">
+            <p><img src= "'.plugins_url(
+                            "includes/images/loading.gif",
+                            __FILE__
+                        ).'";  /></p>
+        </div>';  
+      echo '</div>';
     }
 }
 add_action(
