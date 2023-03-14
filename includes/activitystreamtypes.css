@@ -11,7 +11,10 @@
     position: relative;
     width: 110px;
    }
-
+   .adminoptionpush > .admin-push-all
+   {
+       margin:8px;
+   }
    .wpme-upgrader-custom-notice .notice-left {
        display: table-cell;
        padding: 10px;
@@ -19,6 +22,17 @@
    .admin-button-row.admin-push-all button.pushalltogenoo
    {
    margin-right: -9px;
+    margin-top: 0;
+    padding: 6px 12px;
+    background: #135e96;
+    border: solid 1px #135e96;
+    box-shadow: none;
+    color: #fff;
+    border-radius: 5px;
+   }
+   .adminpushalltogenoo
+   {
+    margin-right: -9px;
     margin-top: 0;
     padding: 6px 12px;
     background: #135e96;
