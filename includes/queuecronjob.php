@@ -4,10 +4,12 @@ function my_cron_schedules($schedules)
 {
 $corn_settings = get_option('WPME_ECOMMERCE');  
 
+$corn_settings_setup = $corn_settings['cronsetup'];
+
     if(!isset($schedules["pertime"])){
       
    $schedules["pertime"] = [
-        "interval" => $corn_settings['cronsetup'] * 60,
+        "interval" => $corn_settings_setup * 60,
         "display" => __("Once every 1 minutes"),
       ];
   }
@@ -19,20 +21,14 @@ $corn_settings = get_option('WPME_ECOMMERCE');
 
 add_filter("cron_schedules", "my_cron_schedules");
 
-
-
-
 if (!wp_next_scheduled("send_queue_record")) {
     
   wp_schedule_event(time(), "pertime", "send_queue_record");
 }
-
-
 add_action("send_queue_record", "send_queue_record_details");
 
 function send_queue_record_details()
 {
-   
    global $wpdb, $WPME_API;
 
   $genoomem_genooqueue = $wpdb->prefix . "genooqueue"; 
@@ -50,6 +46,8 @@ function send_queue_record_details()
     $orderpayload = json_decode($get_all_queue_record->order_payload);
     
     $order = new \WC_Order($order_id);
+    
+    $leadTYpe = wpme_get_customer_lead_type();
 
     
      if (method_exists($WPME_API, 'callCustom')):
@@ -80,32 +78,77 @@ function send_queue_record_details()
         
              $getpayload->first_name = $order->get_billing_first_name();
              $getpayload->last_name = $order->get_billing_last_name();
-                      
-            
-            $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
+             $getpayload->order_date = "$order->date_created";
+             $getpayload->completed_date = "$order->date_created";
+             $getpayload->order_shipped = "$order->date_created";
+             $getpayload->last_updated = "$order->date_created";
+             $getpayload->ec_lead_type_id = $leadTYpe;
+                $getpayload->changed->ec_lead_type_id = $leadTYpe;
             
         
 	   if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
+	            
             $orderpayload->financial_status = 'paid';
+              $orderpayload->ec_lead_type_id = $leadTYpe;
+            $orderpayload->changed->ec_lead_type_id = $leadTYpe;
+            
 
             switch ($get_all_queue_record->order_activitystreamtypes) {
               case "subscription started":
                     $orderpayload->order_status = 'subpayment';
-                    break;
+                    $orderpayload->changed->order_status = 'subpayment';
+                    $orderpayload->action = 'subscription started';
+                $orderpayload->changed->action = 'subscription started';
+                       break;
               case "subscription Renewal":
+                  $orderpayload->action = 'subscription Renewal';
+                $orderpayload->changed->action = 'subscription Renewal';
+
                     $orderpayload->order_status = 'subrenewal';
                     break;
               case "new order":
+                  $orderpayload->action = 'new order';
+                $orderpayload->changed->action = 'new order';
+
                   $orderpayload->order_status = 'order';
                   break;
+                  
+                             
+
             }
+
+           $result = $WPME_API->callCustom('/wpmeorders', 'POST', $orderpayload);
+           
+         //   $WPME_API->updateCart($result->order_id, $orderpayload);
+
+                 
+              if($result->order_id=='') :
+                   
+                    $value = explode(':', $result);
+                   
+                     $str = str_replace('}', "", $value[3]);
+                     
+                     $str_value = str_replace('"', "", $str);
+                     
+            update_post_meta($order_id, 'wpme_order_id', $str_value);
+
+                    $wpme_order_id_value = $str_value;
+                   else:
+                       
+                    $wpme_order_id_value = $result->order_id;
+       
+             update_post_meta($order_id, 'wpme_order_id', $result->order_id);
+                
+                    endif;
+                    
+
           }
 
           if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
             $result = $WPME_API->updateCart($passorders->order_id, $orderpayload);
 
-            if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
-              update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);
+           /* if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
+              update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);*/
           }
        
         }
@@ -131,7 +174,7 @@ function send_queue_record_details()
                  
 
               
-                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal')
+                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal' && $get_all_queue_record->order_activitystreamtypes!='subscription started')
                 {
                    wpme_fire_activity_stream(
                     $genoo_lead_id,
