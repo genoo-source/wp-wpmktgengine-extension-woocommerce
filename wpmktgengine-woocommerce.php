@@ -4869,11 +4869,13 @@ function push_data_into_genoo()
     
     foreach($order_ids as $order_id)
     {
-        $get_all_data = $wpdb->get_row("select * from $genoomem_genooqueue where `order_id`=$order_id");
+        $get_all_data = $wpdb->get_results("select * from $genoomem_genooqueue where `order_id`=$order_id");
     
     foreach($get_all_data as $key => $get_data)
     {
-        $get_data_value = json_encode($get_data->payload,true);
+
+        $get_data_value = $get_data->payload;
+        
 
     $result = $WPME_API->callCustom('/wpmeorders', 'POST',$get_data_value);
      $i++;
@@ -5176,6 +5178,7 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
         
         try {
        $result = $WPME_API->callCustom('/wpmeorders', 'POST',$cartOrder->getPayload());
+       
           if($result->order_id=='') :
                     
                    

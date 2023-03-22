@@ -66,7 +66,7 @@ function send_queue_record_details()
                     "pending payment"
                 
                  ];
-                $subscription_item_values = ['subscription started','subscription Renewal','new order'];
+                $subscription_item_values = ['subscription Started','subscription Renewal','new order'];
                 
                 $failed_order_values = ['sub payment failed','sub renewal failed','payment failed'];
                 
@@ -83,12 +83,12 @@ function send_queue_record_details()
              $getpayload->order_shipped = "$order->date_created";
              $getpayload->last_updated = "$order->date_created";
              $getpayload->ec_lead_type_id = $leadTYpe;
-                $getpayload->changed->ec_lead_type_id = $leadTYpe;
+             $getpayload->changed->ec_lead_type_id = $leadTYpe;
             
         
 	   if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
 	            
-            $orderpayload->financial_status = 'paid';
+          /*  $orderpayload->financial_status = 'paid';
               $orderpayload->ec_lead_type_id = $leadTYpe;
             $orderpayload->changed->ec_lead_type_id = $leadTYpe;
             
@@ -112,12 +112,12 @@ function send_queue_record_details()
 
                   $orderpayload->order_status = 'order';
                   break;
-                  
+                 
                              
 
-            }
+            } */
 
-           $result = $WPME_API->callCustom('/wpmeorders', 'POST', $orderpayload);
+           $result = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
            
          //   $WPME_API->updateCart($result->order_id, $orderpayload);
 
@@ -145,10 +145,10 @@ function send_queue_record_details()
           }
 
           if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
-            $result = $WPME_API->updateCart($passorders->order_id, $orderpayload);
+          //  $result = $WPME_API->updateCart($wpme_order_id_value, $orderpayload);
 
-           /* if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
-              update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);*/
+            if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
+              update_post_meta($order_id, 'wpme_order_id', $result->order_id);
           }
        
         }
@@ -157,13 +157,13 @@ function send_queue_record_details()
 
           $result = $WPME_API->updateCart($cancel_order_id, $orderpayload);
             }
-        $subscription_product_name = get_wpme_subscription_activity_name(
+        /*$subscription_product_name = get_wpme_subscription_activity_name(
                     $order_id
                 );
                 $subscription_product_name_values = implode(
                     "," . " ",
                     $subscription_product_name
-                );
+                );*/
                   $genoo_ids = get_post_meta(
                         $order_id,
                         "wpme_order_id",
@@ -173,8 +173,8 @@ function send_queue_record_details()
                  $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
                  
 
-              
-                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal' && $get_all_queue_record->order_activitystreamtypes!='subscription started')
+           /*   
+                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal' && $get_all_queue_record->order_activitystreamtypes!='subscription Started')
                 {
                    wpme_fire_activity_stream(
                     $genoo_lead_id,
@@ -184,7 +184,7 @@ function send_queue_record_details()
                     " "
                     // Permalink
                 );
-                    }
+                    }*/
                     
                   if($result==true || $genoo_lead_id){
                       
