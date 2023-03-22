@@ -4865,20 +4865,20 @@ function push_data_into_genoo()
         $order_label[] = $checkbox["labelvalue"];
         $subscription_ids[] = $checkbox["label_sub_id"];
     }
+ 
+    
     foreach($order_ids as $order_id)
     {
-        $get_all_data[] = $wpdb->get_results("select `payload` from $genoomem_genooqueue where `order_id`=$order_id");
-        $order_value[] = $order_id;
-       
-    }
-        $i=0;
-
+        $get_all_data = $wpdb->get_row("select * from $genoomem_genooqueue where `order_id`=$order_id");
+    
     foreach($get_all_data as $key => $get_data)
     {
-        $get_data_value = json_decode($get_data,true);
+        $get_data_value = json_encode($get_data->payload,true);
+
     $result = $WPME_API->callCustom('/wpmeorders', 'POST',$get_data_value);
      $i++;
     update_post_meta($order_value[$i], 'wpme_order_id', $result->order_id);
+    }
     }
 }
 // Adding Meta container admin shop_order pages
@@ -5244,3 +5244,4 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
     }
 }
 }
+
