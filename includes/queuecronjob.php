@@ -54,9 +54,21 @@ function send_queue_record_details()
                   $result = $WPME_API->callCustom('/wpmeorders', 'POST',json_decode($getpayload));
 
            
-         //   $WPME_API->updateCart($result->order_id, $orderpayload);
-
-                 
+               $parent_id = $order->get_parent_id();
+        
+                  if($parent_id!=0)
+                  {
+                        $order_id = $parent_id;
+                        $subscription_id = $order_id;
+        
+                  }
+                  else
+                  {
+              $order_id = $order_id;
+             $subscription_id = $order_id;
+        
+        
+                  }
               if($result->order_id=='') :
                    
                     $value = explode(':', $result);
@@ -66,6 +78,7 @@ function send_queue_record_details()
                      $str_value = str_replace('"', "", $str);
                      
             update_post_meta($order_id, 'wpme_order_id', $str_value);
+            update_post_meta($subscription_id, 'wpme_order_id', $str_value);
 
                     $wpme_order_id_value = $str_value;
                    else:
@@ -73,7 +86,8 @@ function send_queue_record_details()
                     $wpme_order_id_value = $result->order_id;
        
              update_post_meta($order_id, 'wpme_order_id', $result->order_id);
-                
+            update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
+
                     endif;
                     
 
@@ -102,7 +116,7 @@ function send_queue_record_details()
                  $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
                  
 
-                  if($result==true || $genoo_lead_id){
+                  if($wpme_order_id_value!=''){
                       
                     
                     $wpdb->update(
@@ -116,28 +130,7 @@ function send_queue_record_details()
                     ]
         );
                  }
-                if(in_array($get_all_queue_record->order_activitystreamtypes,$failed_order_values)){
-                    
-                    $cartAddress = $order->get_address("billing");
-   
-                        $email = $cartAddress['email'];
-                    
-                     $lead = $WPME_API->getLeadByEmail($email);
-                     
-                   if(!empty($lead))
-                     {
-                            $wpdb->update(
-                    $genoomem_genooqueue,
-                    [
-                        "status" => 1,
-                    ],
-                    [
-                        "order_id" => $order_id,
-                      "order_activitystreamtypes" =>  $get_all_queue_record->order_activitystreamtypes
-                    ]
-        );
-                     }
-                  }
+             
        }catch (Exception $e) {
             if ($WPME_API->http->getResponseCode() == 404):
              // Looks like orders not found
