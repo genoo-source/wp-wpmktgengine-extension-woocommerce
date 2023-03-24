@@ -3108,7 +3108,7 @@ function get_wpme_subscription_activity_name($subscription_id)
     return $return;
 }
 
-add_action(
+/*add_action(
     "woocommerce_order_status_processing",
     function ($order_id) {
         // Get API
@@ -3267,7 +3267,7 @@ add_action(
     },
     10,
     1
-);
+); */
 add_action(
     "woocommerce_order_status_on-hold",
     "enable_processing_to_on_hold_notification",
