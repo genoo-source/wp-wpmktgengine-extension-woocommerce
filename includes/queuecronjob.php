@@ -4,10 +4,12 @@ function my_cron_schedules($schedules)
 {
 $corn_settings = get_option('WPME_ECOMMERCE');  
 
+$corn_settings_setup = isset($corn_settings['cronsetup']) ? $corn_settings['cronsetup'] : '';
+
     if(!isset($schedules["pertime"])){
       
    $schedules["pertime"] = [
-        "interval" => $corn_settings['cronsetup'] * 60,
+        "interval" => $corn_settings_setup * 60,
         "display" => __("Once every 1 minutes"),
       ];
   }
@@ -80,14 +82,26 @@ function send_queue_record_details()
         
              $getpayload->first_name = $order->get_billing_first_name();
              $getpayload->last_name = $order->get_billing_last_name();
-                      
-            
+             $getpayload->order_date = "$order->date_created";
+             $getpayload->completed_date = "$order->date_created";
+             $getpayload->order_shipped = "$order->date_created";
+             $getpayload->last_updated = "$order->date_created";
             $passorders = $WPME_API->callCustom('/wpmeorders', 'POST', $getpayload);
             
+             if($passorders->order_id=='') :
+                    
+               $value = explode(':', $passorders);
+                   
+                     $str = str_replace('}', "", $value[3]);
+                     
+                     $str_value = str_replace('"', "", $str);
+                     else:
+              $str_value = $passorders->order_id;
+endif;  
         
 	   if (in_array($get_all_queue_record->order_activitystreamtypes, $subscription_item_values)) {
             $orderpayload->financial_status = 'paid';
-
+           
             switch ($get_all_queue_record->order_activitystreamtypes) {
               case "subscription started":
                     $orderpayload->order_status = 'subpayment';
@@ -102,10 +116,10 @@ function send_queue_record_details()
           }
 
           if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
-            $result = $WPME_API->updateCart($passorders->order_id, $orderpayload);
+            $result = $WPME_API->updateCart($str_value, $orderpayload);
 
             if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
-              update_post_meta($order_id, 'wpme_order_id', $passorders->order_id);
+              update_post_meta($order_id, 'wpme_order_id', $str_value);
           }
        
         }
@@ -131,7 +145,7 @@ function send_queue_record_details()
                  
 
               
-                if($get_all_queue_record->order_activitystreamtypes!='subscription Renewal')
+                if(!in_array($get_all_queue_record->order_activitystreamtypes,$subscription_item_values))
                 {
                    wpme_fire_activity_stream(
                     $genoo_lead_id,
