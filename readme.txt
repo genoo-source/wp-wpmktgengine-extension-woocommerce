@@ -42,6 +42,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 == Changelog ==
 
+== 1.7.49 ==
+pushes order status across - including subscriptions - and ability to push individual orders across to Genoo / WPMktgEngine
+
 == 1.7.48 ==
 Changed order status on the failed order queue.
 
