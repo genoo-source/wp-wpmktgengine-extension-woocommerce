@@ -1632,6 +1632,7 @@ add_action(
                     $cartOrder->changed->order_status = "subpayment";
                     $cartOrder->action = "subscription Started";
                     $cartOrder->changed->action = "subscription Started";
+                    send_cartOrder_to_Genoo($cartOrder);
                 }                          
                 elseif (!empty($subscriptions_ids) && $getrenewal!=''){
                     $cartOrder->order_status = "subrenewal";
@@ -1639,14 +1640,22 @@ add_action(
                     $cartOrder->changed->order_status = "subrenewal";
                     $cartOrder->action = "subscription Renewal";
                     $cartOrder->changed->action = "subscription Renewal";
-                } else {
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->action = "new order";
-                    $cartOrder->changed->action = "new order";
-                    $cartOrder->order_status = "order";
-                    $cartOrder->changed->order_status = "order";
+                    send_cartOrder_to_Genoo($cartOrder);
+                    return;
                 }
-            
+
+                $cartOrder->order_number = $order_id;
+                $cartOrder->financial_status = "paid";
+                $cartOrder->action = "new order";
+                $cartOrder->changed->action = "new order";
+                $cartOrder->order_status = "order";
+                $cartOrder->changed->order_status = "order";
+                send_cartOrder_to_Genoo($cartOrder);
+            });
+
+            function send_cartOrder_to_Genoo($cartOrder) {
+                global $WPME_API;
+
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST',$cartOrder->getPayload());
             
@@ -1680,7 +1689,7 @@ add_action(
                                 $rand
                             );   
                 }
-            });
+            }
 
             /**
              * Order Failed
