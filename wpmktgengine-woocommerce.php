@@ -1592,7 +1592,7 @@ add_action(
                     "",
                     $cartAddress2["state"]
                 );
-                $cartOrder->order_number = isset($subscription_id) ? $subscription_id : $order_id;
+                $cartOrder->order_number = $order_id;
                 $cartOrder->first_name = $order->get_billing_first_name;
                 $cartOrder->last_name = $order->get_billing_last_name;
                 $cartOrder->currency = $order->get_order_currency();
@@ -1632,7 +1632,7 @@ add_action(
                     $cartOrder->changed->order_status = "subpayment";
                     $cartOrder->action = "subscription Started";
                     $cartOrder->changed->action = "subscription Started";
-                    send_cartOrder_to_Genoo($cartOrder);
+                    $cartOrder->order_number = $subscription_id;
                 }                          
                 elseif (!empty($subscriptions_ids) && $getrenewal!=''){
                     $cartOrder->order_status = "subrenewal";
@@ -1640,28 +1640,26 @@ add_action(
                     $cartOrder->changed->order_status = "subrenewal";
                     $cartOrder->action = "subscription Renewal";
                     $cartOrder->changed->action = "subscription Renewal";
-                    send_cartOrder_to_Genoo($cartOrder);
-                    return;
+                } else {
+                    $cartOrder->financial_status = "paid";
+                    $cartOrder->action = "new order";
+                    $cartOrder->changed->action = "new order";
+                    $cartOrder->order_status = "order";
+                    $cartOrder->changed->order_status = "order";
                 }
 
-                $cartOrder->order_number = $order_id;
-                $cartOrder->financial_status = "paid";
-                $cartOrder->action = "new order";
-                $cartOrder->changed->action = "new order";
-                $cartOrder->order_status = "order";
-                $cartOrder->changed->order_status = "order";
-                send_cartOrder_to_Genoo($cartOrder);
-            });
-
-            function send_cartOrder_to_Genoo($cartOrder) {
-                global $WPME_API;
-
                 try {
-                    $result = $WPME_API->callCustom('/wpmeorders', 'POST',$cartOrder->getPayload());
+                    $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
             
                     if($result->order_id!='')
                     {
                         update_post_meta($order_id, 'wpme_order_id', $result->order_id);
+                        if (isset($subscription_id)) {
+                            $cartOrder->order_number = $order_id;
+                            $result = $WPME_API->callCustom('/wpmeorders' . '/' . $result->order_id, 'PUT', $cartOrder->getPayload());
+                            update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
+                            error_log('$result:' . $result);
+                        }
                     }
                     else
                     {
@@ -1689,7 +1687,7 @@ add_action(
                                 $rand
                             );   
                 }
-            }
+            });
 
             /**
              * Order Failed
