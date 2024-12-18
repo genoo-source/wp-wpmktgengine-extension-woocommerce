@@ -1491,6 +1491,7 @@ add_action(
                 $getrenewal = get_post_meta($order_id, "_subscription_renewal", true);
                 if(!empty($subscriptions_ids)):
                 foreach($subscriptions_ids as $subscriptions_id) :
+                    $subscription_id = $subscriptions_id->id;
                     $get_order = wc_get_order($subscriptions_id->id);
                             foreach ($get_order->get_items() as $item) {
                                 
@@ -1591,7 +1592,7 @@ add_action(
                                 "",
                                 $cartAddress2["state"]
                             );
-                            $cartOrder->order_number = $order_id;
+                            $cartOrder->order_number = isset($subscription_id) ? $subscription_id : $order_id;
                             $cartOrder->first_name =
                                 $order->get_billing_first_name;
                             $cartOrder->last_name =
