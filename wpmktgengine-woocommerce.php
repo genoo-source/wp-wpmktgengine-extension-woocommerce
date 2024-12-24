@@ -1632,7 +1632,7 @@ add_action(
                     $cartOrder->changed->order_status = "subpayment";
                     $cartOrder->action = "subscription Started";
                     $cartOrder->changed->action = "subscription Started";
-                    $cartOrder->order_number = $subscription_id;
+                    $cartOrder->subscription_id = $subscription_id;
                 }                          
                 elseif (!empty($subscriptions_ids) && $getrenewal!=''){
                     $cartOrder->order_status = "subrenewal";
@@ -1640,12 +1640,14 @@ add_action(
                     $cartOrder->changed->order_status = "subrenewal";
                     $cartOrder->action = "subscription Renewal";
                     $cartOrder->changed->action = "subscription Renewal";
+                    $cartOrder->subscription_id = $subscription_id;
                 } else {
                     $cartOrder->financial_status = "paid";
                     $cartOrder->action = "new order";
                     $cartOrder->changed->action = "new order";
                     $cartOrder->order_status = "order";
                     $cartOrder->changed->order_status = "order";
+                    $cartOrder->subscription_id = $subscription_id;
                 }
 
                 try {
@@ -1655,8 +1657,10 @@ add_action(
                     {
                         update_post_meta($order_id, 'wpme_order_id', $result->order_id);
                         if (isset($subscription_id)) {
-                            $cartOrder->order_number = $order_id;
-                            $result = $WPME_API->callCustom('/wpmeorders' . '/' . $result->order_id, 'PUT', $cartOrder->getPayload());
+                            $cartOrder->__set('subscription_id', $subscription_id);
+                            $cartOrder->setId($result->order_id);
+                            $order_payload = $cartOrder->getPayload();
+                            $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
                             update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
                             error_log('$result:' . $result);
                         }
