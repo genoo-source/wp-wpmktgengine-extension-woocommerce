@@ -1652,13 +1652,11 @@ add_action(
 
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
-            
+                    error_log('cartOrder Payload: ' . json_encode($cartOrder->getPayload()));
                     if($result->order_id!='')
                     {
                         update_post_meta($order_id, 'wpme_order_id', $result->order_id);
                         if (isset($subscription_id)) {
-                            $cartOrder->__set('subscription_id', $subscription_id);
-                            $cartOrder->setId($result->order_id);
                             $order_payload = $cartOrder->getPayload();
                             $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
                             update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
