@@ -44,6 +44,7 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 == 1.7.49 ==
 pushes order status across - including subscriptions - and ability to push individual orders across to Genoo / WPMktgEngine
+creates activity stream on subscription started, and ensures order number in Genoo matches order in WooC.
 
 == 1.7.48 ==
 Changed order status on the failed order queue.
