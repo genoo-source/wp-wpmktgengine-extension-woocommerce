@@ -1660,7 +1660,7 @@ add_action(
                             $order_payload = $cartOrder->getPayload();
                             $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
                             update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
-                            error_log('$result:' . $result);
+                            //error_log('$result:' . $result);
                         }
                     }
                     else
@@ -1690,6 +1690,60 @@ add_action(
                             );   
                 }
             });
+
+            add_action(
+                'woocommerce_subscription_status_updated', 
+                    function ($subscription, $new_status, $old_status) {
+                        global $WPME_API;
+                        $rand = rand(); 
+
+                        $subscription_id = $subscription->get_id();
+                        $total_cost = $subscription->get_total();
+                        
+                        $customer_email = $subscription->get_billing_email();
+
+                        $datetime = new DateTime();
+                        $activityDate = $datetime->format('c');// 'c' stands for ISO 8601 format
+
+                        $activities = array(
+                            'email' => $customer_email, 
+                            'activity_date' => $activityDate, // Dates should be in the format that the field is set to or ISO 8601 format.
+                            'activity_name' => '#' . $subscription_id . '; $' . $total_cost,
+                            'activity_description' => "", 
+                            'url' => get_permalink($subscription_id) // url of post
+                        );
+                        
+                        if ($new_status == 'active') {
+                            $activities = array_merge($activities, ['activity_stream_type' => 'subscription activated']);
+                        } else if ($new_status == 'on-hold') {
+                            $activities = array_merge($activities, ['activity_stream_type' => 'subscription on hold']);
+                        } else if ($new_status == 'cancelled') {
+                            $activities = array_merge($activities, ['activity_stream_type' => 'subscription cancelled']);
+                        } else if ($new_status == 'expired') {
+                            $activities = array_merge($activities, ['activity_stream_type' => 'subscription expired']);
+                        } else if ($new_status == 'pending-cancel') {
+                            $activities = array_merge($activities, ['activity_stream_type' => 'subscription pending cancellation']);
+                        }
+
+                        // $result = $WPME_API->postActivities($activities);
+                        $result = $WPME_API->callCustom('/activitystreams[P]', 'POST', $activities);
+                        if ($result->process_results){
+                            apivalidate(
+                                $subscription_id,
+                                $activities['activity_stream_type'],
+                                "0",
+                                $activityDate,
+                                $activities,
+                                $activities,
+                                "0",
+                                "API key not found",
+                                $rand
+                            );
+                        }
+                }, 
+                10,
+                3
+            );
 
             /**
              * Order Failed
