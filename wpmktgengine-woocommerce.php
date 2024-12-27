@@ -1750,6 +1750,49 @@ add_action(
             );
 
             /**
+             * Subscription renewal
+             */
+            add_action(
+                'woocommerce_subscription_renewal_payment_complete', 
+                function ($subscription, $last_order) {
+                    global $WPME_API;
+                    $rand = rand();
+                    $subscription_id = $subscription->get_id();
+                    $total_cost = $subscription->get_total();
+                    $customer_email = $subscription->get_billing_email();
+                    $datetime = new DateTime();
+                    $renewalDate = $datetime->format('c');// 'c' stands for ISO 8601 format
+                    $order_id = $last_order->id;
+
+                    $activity = array(
+                        'email' => $customer_email, 
+                        'activity_date' => $renewalDate, // Dates should be in the format that the field is set to or ISO 8601 format.
+                        'activity_name' => '#' . $order_id . '; $' . $total_cost,
+                        'activity_description' => "Subscription Renewal", 
+                        'activity_stream_type' => 'Subscription Payment',
+                        'url' => get_permalink($order_id) // url of post
+                    );
+
+                    $result = $WPME_API->postActivities([$activity]);
+                    if (isset($result->process_results[0]) && $result->process_results[0]->result === "failed"){
+                        apivalidate(
+                            $order_id,
+                            $activity['activity_stream_type'],
+                            $subscription_id,
+                            $renewalDate,
+                            $activity,
+                            $activity,
+                            "0",
+                            $result->process_results[0]->error_message,
+                            $rand
+                        );
+                    }
+                }, 
+                10,
+                2
+            );
+
+            /**
              * Order Failed
              */
             add_action(
