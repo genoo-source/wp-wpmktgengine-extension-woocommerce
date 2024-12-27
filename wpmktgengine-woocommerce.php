@@ -1653,8 +1653,7 @@ add_action(
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
                     error_log('cartOrder Payload: ' . json_encode($cartOrder->getPayload()));
-                    if($result->order_id!='')
-                    {
+                    if($result->result === 'success') {
                         update_post_meta($order_id, 'wpme_order_id', $result->order_id);
                         if (isset($subscription_id)) {
                             $order_payload = $cartOrder->getPayload();
@@ -1663,31 +1662,32 @@ add_action(
                             //error_log('$result:' . $result);
                         }
                     }
-                    else
-                    {
-                        apivalidate($order->id,
-                                    $cartOrder->action,
-                                    "0",
-                                    $order->date_created,
-                                    (array) $cartOrder->object,
-                                    (array) $cartOrder->getPayload(),
-                                    "0",
-                                    "API key not found",
-                                    $rand
-                                    );      
+                    else if ($result->result === 'failed') {
+                        apivalidate(
+                            $order->id,
+                            $cartOrder->action,
+                            $subscription_id,
+                            $order->date_created,
+                            (array) $cartOrder->object,
+                            (array) $cartOrder->getPayload(),
+                            "0",
+                            $result->message,
+                            $rand
+                        );      
                     }
 
                 } catch (\Exception $e) {
-                    apivalidate($order->id,
-                                $cartOrder->action,
-                                "0",
-                                $order->date_created,
-                                (array) $cartOrder->object,
-                                (array) $cartOrder->getPayload(),
-                                "0",
-                                "API key not found",
-                                $rand
-                            );   
+                    apivalidate(
+                        $order->id,
+                        $cartOrder->action,
+                        $subscription_id,
+                        $order->date_created,
+                        (array) $cartOrder->object,
+                        (array) $cartOrder->getPayload(),
+                        "0",
+                        "Exception happened.",
+                        $rand
+                    );   
                 }
             });
 
@@ -1731,9 +1731,9 @@ add_action(
                     $result = $WPME_API->postActivities([$activity]);
                     if (isset($result->process_results[0]) && $result->process_results[0]->result === "failed"){
                         apivalidate(
-                            $subscription_id,
+                            $order_id,
                             $activity['activity_stream_type'],
-                            "0",
+                            $subscription_id,
                             $activityDate,
                             $activity,
                             $activity,
