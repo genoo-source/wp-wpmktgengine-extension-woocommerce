@@ -1697,14 +1697,16 @@ add_action(
             add_action(
                 'woocommerce_subscription_status_updated', 
                 function ($subscription, $new_status, $old_status) {
+                    if ($new_status === 'active' && $old_status === 'pending') {//create a new subscription
+                        return;
+                    }
+
                     global $WPME_API;
-                    $rand = rand(); 
-
+                    $rand = rand();
                     $subscription_id = $subscription->get_id();
-                    $total_cost = $subscription->get_total();
-                    
+                    $order_id = $subscription->get_parent_id();
+                    $total_cost = $subscription->get_total();                    
                     $customer_email = $subscription->get_billing_email();
-
                     $datetime = new DateTime();
                     $activityDate = $datetime->format('c');// 'c' stands for ISO 8601 format
 
