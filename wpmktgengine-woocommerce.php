@@ -1653,43 +1653,101 @@ add_action(
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
                     error_log('cartOrder Payload: ' . json_encode($cartOrder->getPayload()));
-                    if($result->order_id!='')
-                    {
+                    if($result->result === 'success') {
                         update_post_meta($order_id, 'wpme_order_id', $result->order_id);
                         if (isset($subscription_id)) {
                             $order_payload = $cartOrder->getPayload();
                             $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
                             update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
-                            error_log('$result:' . $result);
+                            //error_log('$result:' . $result);
                         }
                     }
-                    else
-                    {
-                        apivalidate($order->id,
-                                    $cartOrder->action,
-                                    "0",
-                                    $order->date_created,
-                                    (array) $cartOrder->object,
-                                    (array) $cartOrder->getPayload(),
-                                    "0",
-                                    "API key not found",
-                                    $rand
-                                    );      
+                    else if ($result->result === 'failed') {
+                        apivalidate(
+                            $order->id,
+                            $cartOrder->action,
+                            $subscription_id,
+                            $order->date_created,
+                            (array) $cartOrder->object,
+                            (array) $cartOrder->getPayload(),
+                            "0",
+                            $result->message,
+                            $rand
+                        );      
                     }
 
                 } catch (\Exception $e) {
-                    apivalidate($order->id,
-                                $cartOrder->action,
-                                "0",
-                                $order->date_created,
-                                (array) $cartOrder->object,
-                                (array) $cartOrder->getPayload(),
-                                "0",
-                                "API key not found",
-                                $rand
-                            );   
+                    apivalidate(
+                        $order->id,
+                        $cartOrder->action,
+                        $subscription_id,
+                        $order->date_created,
+                        (array) $cartOrder->object,
+                        (array) $cartOrder->getPayload(),
+                        "0",
+                        "Exception happened.",
+                        $rand
+                    );   
                 }
             });
+
+            /**
+             *  Subscription Status Changed
+             */
+            add_action(
+                'woocommerce_subscription_status_updated', 
+                function ($subscription, $new_status, $old_status) {
+                    if ($new_status === 'active' && $old_status === 'pending') {//create a new subscription
+                        return;
+                    }
+
+                    global $WPME_API;
+                    $rand = rand();
+                    $subscription_id = $subscription->get_id();
+                    $order_id = $subscription->get_parent_id();
+                    $total_cost = $subscription->get_total();                    
+                    $customer_email = $subscription->get_billing_email();
+                    $datetime = new DateTime();
+                    $activityDate = $datetime->format('c');// 'c' stands for ISO 8601 format
+
+                    $activity = array(
+                        'email' => $customer_email, 
+                        'activity_date' => $activityDate, // Dates should be in the format that the field is set to or ISO 8601 format.
+                        'activity_name' => '#' . $subscription_id . '; $' . $total_cost,
+                        'activity_description' => "", 
+                        'url' => get_permalink($subscription_id) // url of post
+                    );
+                    
+                    if ($new_status == 'active') {
+                        $activity = array_merge($activity, ['activity_stream_type' => 'subscription activated']);
+                    } else if ($new_status == 'on-hold') {
+                        $activity = array_merge($activity, ['activity_stream_type' => 'subscription on hold']);
+                    } else if ($new_status == 'cancelled') {
+                        $activity = array_merge($activity, ['activity_stream_type' => 'subscription cancelled']);
+                    } else if ($new_status == 'expired') {
+                        $activity = array_merge($activity, ['activity_stream_type' => 'subscription expired']);
+                    } else if ($new_status == 'pending-cancel') {
+                        $activity = array_merge($activity, ['activity_stream_type' => 'subscription pending cancellation']);
+                    }
+
+                    $result = $WPME_API->postActivities([$activity]);
+                    if (isset($result->process_results[0]) && $result->process_results[0]->result === "failed"){
+                        apivalidate(
+                            $order_id,
+                            $activity['activity_stream_type'],
+                            $subscription_id,
+                            $activityDate,
+                            $activity,
+                            $activity,
+                            "0",
+                            $result->process_results[0]->error_message,
+                            $rand
+                        );
+                    }
+                }, 
+                10,
+                3
+            );
 
             /**
              * Order Failed
