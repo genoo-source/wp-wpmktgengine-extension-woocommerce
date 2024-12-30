@@ -5,7 +5,7 @@ Requires at least: 5.3.1
 Tested up to: 6.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 111.7.49
+Stable tag: 1.7.50
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,10 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.50 ==
+push subscription status changes into activity stream. 
+push subscription renewal orders with proper order number.
 
 == 1.7.49 ==
 pushes order status across - including subscriptions - and ability to push individual orders across to Genoo / WPMktgEngine
