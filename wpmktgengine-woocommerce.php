@@ -462,9 +462,9 @@ add_action(
                             true
                         )
                     );
-                    if (
+                    if ( isset($_GET["page"]) && (
                         $_GET["page"] == "WPMKTENGINE" ||
-                        $_GET["page"] == "Genoo"
+                        $_GET["page"] == "Genoo" )
                     ) {
                         wp_enqueue_style(
                             "tabstyle",
