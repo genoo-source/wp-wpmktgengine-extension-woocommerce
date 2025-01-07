@@ -42,6 +42,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 == Changelog ==
 
+== 1.7.51 ==
+fixed issue that conflicted with Media Library display.
+
 == 1.7.50 ==
 push subscription status changes into activity stream. 
 push subscription renewal orders with proper order number.
