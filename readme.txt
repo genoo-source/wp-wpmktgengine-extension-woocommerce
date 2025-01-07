@@ -5,7 +5,7 @@ Requires at least: 5.3.1
 Tested up to: 6.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 1.7.51
+Stable tag: 11.7.51
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
