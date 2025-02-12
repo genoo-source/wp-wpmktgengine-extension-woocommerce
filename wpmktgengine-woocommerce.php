@@ -1626,7 +1626,7 @@ add_action(
                     "WPC-3 Woocommerce order: " . $id
                 );
                    
-                if (!empty($subscriptions_ids) && !$getrenewal)  {
+                if (!empty($subscriptions_ids) && !$getrenewal)  {// When checkout at FunnelKit - Digital Magazin Subscription
                     $cartOrder->order_status = "subpayment";
                     $cartOrder->financial_status = "paid";
                     $cartOrder->changed->order_status = "subpayment";
@@ -1641,13 +1641,15 @@ add_action(
                     $cartOrder->action = "subscription Renewal";
                     $cartOrder->changed->action = "subscription Renewal";
                     $cartOrder->subscription_id = $subscription_id;
-                } else {
+                } else {// When checkout at FunnelKit - Niche For Profits
                     $cartOrder->financial_status = "paid";
                     $cartOrder->action = "new order";
                     $cartOrder->changed->action = "new order";
                     $cartOrder->order_status = "order";
                     $cartOrder->changed->order_status = "order";
-                    $cartOrder->subscription_id = $subscription_id;
+                    if ($subscription_id) {
+                        $cartOrder->subscription_id = $subscription_id;
+                    }
                 }
 
                 try {
