@@ -1601,9 +1601,11 @@ add_action(
                 // Add email and leadType
                 //ec_lead_type_id = lead type ID
                 //email_ordered_from = email address making the sale
-                $leadTYpe = wpme_get_customer_lead_type();
-                $cartOrder->ec_lead_type_id = $leadTYpe;
-                $cartOrder->changed->ec_lead_type_id = $leadTYpe;
+                $leadType = wpme_get_customer_lead_type();
+                if ($leadType) {
+                    $cartOrder->ec_lead_type_id = $leadType;
+                    $cartOrder->changed->ec_lead_type_id = $leadType;
+                }
                 $cartOrder->email_ordered_from = $email;
                 $cartOrder->changed->email_ordered_from = $email;
                 $cartOrder->total_price = $order->get_total();
@@ -3517,9 +3519,11 @@ $cartOrder->addItemsArray($wpmeApiOrderItems);
 // Add email and leadType
 //ec_lead_type_id = lead type ID
 //email_ordered_from = email address making the sale
-$leadTYpe = wpme_get_customer_lead_type();
-$cartOrder->ec_lead_type_id = $leadTYpe;
-$cartOrder->changed->ec_lead_type_id = $leadTYpe;
+$leadType = wpme_get_customer_lead_type();
+if ($leadType) {
+    $cartOrder->ec_lead_type_id = $leadType;
+    $cartOrder->changed->ec_lead_type_id = $leadType;    
+}
 $cartOrder->email_ordered_from = $email;
 $cartOrder->changed->email_ordered_from = $email;
 $cartOrder->total_price = $order->get_total();
@@ -3943,12 +3947,11 @@ add_action(
                     $cartOrder->addItemsArray($cartContents);
 
                     // Add email and leadType
-                    $leadTYpe = wpme_get_customer_lead_type();
-
-                    $cartOrder->ec_lead_type_id = wpme_get_customer_lead_type();
-
-                    $cartOrder->changed->ec_lead_type_id = $leadTYpe;
-
+                    $leadType = wpme_get_customer_lead_type();
+                    if ($leadType) {
+                        $cartOrder->ec_lead_type_id = $leadType;
+                        $cartOrder->changed->ec_lead_type_id = $leadTYpe;
+                    }
                     $cartOrder->email_ordered_from = $email;
 
                     $cartOrder->changed->email_ordered_from = $email;
