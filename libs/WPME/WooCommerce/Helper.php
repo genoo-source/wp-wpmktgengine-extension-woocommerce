@@ -34,9 +34,9 @@ class Helper
 	 */
 	public static function getEmailFromOrder($order_id)
 	{
-		if(class_exists('\WC_Order')){
-			$order = new \WC_Order($order_id);
-			if(method_exists($order, 'get_address')){
+		if(function_exists('wc_get_order')){
+			$order = wc_get_order($order_id);
+			if($order && method_exists($order, 'get_address')){
 				$orderAddress = $order->get_address();
 				return array_key_exists('email', $orderAddress) ? (!empty($orderAddress['email']) ? $orderAddress['email'] : FALSE) : FALSE;
 			}
