@@ -1668,45 +1668,106 @@ add_action(
                     "WPC-3 Woocommerce order: " . $id
                 );
                    
-                if (!empty($subscriptions_ids) && !$getrenewal)  {// When checkout at FunnelKit - Digital Magazin Subscription
-                    $cartOrder->order_status = "subpayment";
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->changed->order_status = "subpayment";
-                    $cartOrder->action = "subscription Started";
-                    $cartOrder->changed->action = "subscription Started";
+                // ALL paid orders get "new order" action - subscription activity created separately
+                $cartOrder->financial_status = "paid";
+                $cartOrder->action = "new order";
+                $cartOrder->changed->action = "new order";
+                $cartOrder->order_status = "order";
+                $cartOrder->changed->order_status = "order";
+
+                // Track subscription type for activity creation after order is created
+                $subscription_activity_type = null;
+
+                if (!empty($subscriptions_ids) && !$getrenewal) {
+                    // NEW SUBSCRIPTION
                     $cartOrder->subscription_id = $subscription_id;
-                }                          
-                elseif (!empty($subscriptions_ids) && $getrenewal!=''){
-                    $cartOrder->order_status = "subrenewal";
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->changed->order_status = "subrenewal";
-                    $cartOrder->action = "subscription Renewal";
-                    $cartOrder->changed->action = "subscription Renewal";
+                    $subscription_activity_type = "subscription started";
+                    wpme_simple_log_2("WPC-4 New subscription order. Subscription ID: " . $subscription_id);
+                } elseif (!empty($subscriptions_ids) && $getrenewal != '') {
+                    // SUBSCRIPTION RENEWAL
                     $cartOrder->subscription_id = $subscription_id;
-                } else {// When checkout at FunnelKit - Niche For Profits
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->action = "new order";
-                    $cartOrder->changed->action = "new order";
-                    $cartOrder->order_status = "order";
-                    $cartOrder->changed->order_status = "order";
-                    if ($subscription_id) {
-                        $cartOrder->subscription_id = $subscription_id;
-                    }
+                    $subscription_activity_type = "subscription renewal";
+                    wpme_simple_log_2("WPC-4 Subscription renewal order. Subscription ID: " . $subscription_id);
+                } elseif ($subscription_id) {
+                    $cartOrder->subscription_id = $subscription_id;
                 }
 
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
                     error_log('cartOrder Payload: ' . json_encode($cartOrder->getPayload()));
-                    if($result->result === 'success') {
+                    
+                    if ($result->result === 'success') {
+                        // Save Genoo order ID to WooCommerce order
                         wpme_update_order_meta($order_id, 'wpme_order_id', $result->order_id);
-                        if (isset($subscription_id)) {
-                            $order_payload = $cartOrder->getPayload();
-                            $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
+                        wpme_simple_log_2("WPC-5 Order created in Genoo. Genoo ID: " . $result->order_id);
+                        
+                        // Save Genoo order ID to subscription if applicable
+                        if (isset($subscription_id) && !empty($subscription_id)) {
                             wpme_update_order_meta($subscription_id, 'wpme_order_id', $result->order_id);
-                            //error_log('$result:' . $result);
                         }
-                    }
-                    else if ($result->result === 'failed') {
+                        
+                        // Create subscription activity AFTER order is created
+                        if ($subscription_activity_type !== null && !empty($subscription_id)) {
+                            $datetime = new \DateTime();
+                            $activityDate = $datetime->format('c');
+                            
+                            $subscription_activity = array(
+                                'email' => $cartOrderEmail,
+                                'activity_date' => $activityDate,
+                                'activity_name' => '#' . $subscription_id . '; $' . $order->get_total(),
+                                'activity_description' => '',
+                                'activity_stream_type' => $subscription_activity_type,
+                                'url' => get_permalink($subscription_id)
+                            );
+                            
+                            try {
+                                $activity_result = $WPME_API->postActivities([$subscription_activity]);
+                                
+                                if (isset($activity_result->process_results[0]) && 
+                                    $activity_result->process_results[0]->result === "success") {
+                                    wpme_simple_log_2(
+                                        "WPC-6 Created " . $subscription_activity_type . 
+                                        " activity for subscription: " . $subscription_id
+                                    );
+                                } else {
+                                    // Activity creation failed - queue for retry
+                                    $error_msg = isset($activity_result->process_results[0]->error_message) 
+                                        ? $activity_result->process_results[0]->error_message 
+                                        : "Unknown error";
+                                    wpme_simple_log_2(
+                                        "WPC-6 Failed to create subscription activity: " . $error_msg
+                                    );
+                                    apivalidate(
+                                        $order_id,
+                                        $subscription_activity_type,
+                                        $subscription_id,
+                                        $order->date_created,
+                                        $subscription_activity,
+                                        $subscription_activity,
+                                        "0",
+                                        $error_msg,
+                                        $rand
+                                    );
+                                }
+                            } catch (\Exception $activityException) {
+                                wpme_simple_log_2(
+                                    "WPC-6 Exception creating subscription activity: " . 
+                                    $activityException->getMessage()
+                                );
+                                apivalidate(
+                                    $order_id,
+                                    $subscription_activity_type,
+                                    $subscription_id,
+                                    $order->date_created,
+                                    $subscription_activity,
+                                    $subscription_activity,
+                                    "0",
+                                    $activityException->getMessage(),
+                                    $rand
+                                );
+                            }
+                        }
+                    } elseif ($result->result === 'failed') {
                         apivalidate(
                             $order->get_id(),
                             $cartOrder->action,
@@ -1717,7 +1778,7 @@ add_action(
                             "0",
                             $result->message,
                             $rand
-                        );      
+                        );
                     }
 
                 } catch (\Exception $e) {
@@ -1729,9 +1790,9 @@ add_action(
                         (array) $cartOrder->object,
                         (array) $cartOrder->getPayload(),
                         "0",
-                        "Exception happened.",
+                        "Exception happened: " . $e->getMessage(),
                         $rand
-                    );   
+                    );
                 }
             });
 
