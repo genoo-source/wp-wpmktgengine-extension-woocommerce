@@ -45,7 +45,10 @@ function send_queue_record_details()
     
     
 
-    $order = new \WC_Order($order_id);
+    $order = wc_get_order($order_id);
+    if (!$order) {
+        continue;
+    }
     
        try {
             // Make a POST request, to Genoo / WPME api, for that rest endpoint
@@ -77,16 +80,16 @@ function send_queue_record_details()
                      
                      $str_value = str_replace('"', "", $str);
                      
-            update_post_meta($order_id, 'wpme_order_id', $str_value);
-            update_post_meta($subscription_id, 'wpme_order_id', $str_value);
+            wpme_update_order_meta($order_id, 'wpme_order_id', $str_value);
+            wpme_update_order_meta($subscription_id, 'wpme_order_id', $str_value);
 
                     $wpme_order_id_value = $str_value;
                    else:
                        
                     $wpme_order_id_value = $result->order_id;
        
-             update_post_meta($order_id, 'wpme_order_id', $result->order_id);
-            update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
+            wpme_update_order_meta($order_id, 'wpme_order_id', $result->order_id);
+            wpme_update_order_meta($subscription_id, 'wpme_order_id', $result->order_id);
 
                     endif;
                     
@@ -97,21 +100,17 @@ function send_queue_record_details()
           //  $result = $WPME_API->updateCart($wpme_order_id_value, $orderpayload);
 
             if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
-              update_post_meta($order_id, 'wpme_order_id', $result->order_id);
+              wpme_update_order_meta($order_id, 'wpme_order_id', $result->order_id);
           }
        
         
         if ($get_all_queue_record->order_activitystreamtypes == 'cancelled order') {
-          $cancel_order_id = get_post_meta($order_id, 'wpme_order_id', true);
+          $cancel_order_id = wpme_get_order_meta($order_id, 'wpme_order_id');
 
           $result = $WPME_API->updateCart($cancel_order_id, $orderpayload);
             }
      
-                  $genoo_ids = get_post_meta(
-                        $order_id,
-                        "wpme_order_id",
-                        true
-                    );
+                  $genoo_ids = wpme_get_order_meta($order_id, "wpme_order_id");
                     
                  $genoo_lead_id = get_wpme_order_lead_id($genoo_ids);
                  

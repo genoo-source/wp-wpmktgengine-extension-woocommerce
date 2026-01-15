@@ -36,17 +36,39 @@ class Product
     public static function convertToProductArray(\WP_Post $product)
     {
         $link = get_permalink($product->ID);
-        $productSingle = new \WC_Product_Simple($product->ID);
-        $productCategories = $productSingle->get_categories();
-        $productCategories = explode(', ', strip_tags($productCategories));
-        $productCategories = is_array($productCategories) && !empty($productCategories) ? $productCategories : array();
+        $productSingle = wc_get_product($product->ID);
+        
+        // Handle case where product couldn't be loaded
+        if (!$productSingle) {
+            return array();
+        }
+        
+        // Get product categories (WooCommerce 3.0+ compatible)
+        $productCategories = array();
+        $terms = wp_get_post_terms($product->ID, 'product_cat');
+        if (!is_wp_error($terms) && !empty($terms)) {
+            foreach ($terms as $term) {
+                $productCategories[] = $term->name;
+            }
+        }
+        
+        // Get product tags (WooCommerce 3.0+ compatible)
+        $productTags = array();
+        $tagTerms = wp_get_post_terms($product->ID, 'product_tag');
+        if (!is_wp_error($tagTerms) && !empty($tagTerms)) {
+            foreach ($tagTerms as $tag) {
+                $productTags[] = $tag->name;
+            }
+        }
+        $tagsString = implode(', ', $productTags);
+        
         $productArray = array(
             'categories' => $productCategories,
             'id' => $product->ID,
             'name' => $product->post_title,
             'price' => $productSingle->get_price(),
             'sku' => $productSingle->get_sku(),
-            'tags' => strip_tags($productSingle->get_tags()), // divided by comma
+            'tags' => $tagsString,
             'type' => $productSingle->get_type(),
             'url' => $link,
             'vendor' => '',

@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WooCommerce - WPMktgEngine | Genoo Extension
+Plugin Name: Genoo WPMktgEngine WooCommerce Extension
 Description: Genoo, LLC
 Author:  Genoo, LLC
 Author URI: http://www.genoo.com/
@@ -8,7 +8,8 @@ Author Email: info@genoo.com
 Version: 1.7.51
 License: GPLv2
 WC requires at least: 3.0.0
-WC tested up to: 5.2.3 */
+WC tested up to: 9.4.0
+Requires Plugins: woocommerce */
 /*
 Copyright 2015  WPMKTENGINE, LLC  (web : http://www.genoo.com/)
 This program is free software; you can redistribute it and/or modify
@@ -41,6 +42,60 @@ define("WPMKTENGINE_ECOMMERCE_REFRESH", md5("1.0-version"));
 define("WPMKTENGINE_ECOMMERCE_LOG", true);
 
 define("WPMKTENGINE_ECOMMERCE_LOG_FOLDER", __DIR__);
+
+/**
+ * Declare HPOS (High-Performance Order Storage) compatibility
+ */
+add_action('before_woocommerce_init', function() {
+    if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'custom_order_tables',
+            __FILE__,
+            true
+        );
+    }
+});
+
+/**
+ * HPOS-compatible helper functions for order meta
+ */
+
+/**
+ * Get order meta in an HPOS-compatible way
+ *
+ * @param int|WC_Order $order Order ID or order object
+ * @param string $key Meta key to retrieve
+ * @return mixed Meta value or empty string
+ */
+function wpme_get_order_meta($order, $key) {
+    if (is_numeric($order)) {
+        $order = wc_get_order($order);
+    }
+    if ($order && is_a($order, 'WC_Order')) {
+        return $order->get_meta($key);
+    }
+    return '';
+}
+
+/**
+ * Update order meta in an HPOS-compatible way
+ *
+ * @param int|WC_Order $order Order ID or order object
+ * @param string $key Meta key to update
+ * @param mixed $value Meta value to set
+ * @return bool True on success, false on failure
+ */
+function wpme_update_order_meta($order, $key, $value) {
+    if (is_numeric($order)) {
+        $order = wc_get_order($order);
+    }
+    if ($order && is_a($order, 'WC_Order')) {
+        $order->update_meta_data($key, $value);
+        $order->save();
+        return true;
+    }
+    return false;
+}
 
 /**
  * Give us the API
@@ -545,7 +600,7 @@ add_action(
                 "wpmktengine_tools_extensions_widget",
 
                 function ($array) {
-                    $array["WooCommerce - WPMktgEngine | Genoo Extension"] =
+                    $array["Genoo WPMktgEngine WooCommerce Extension"] =
                         '<span style="color:green">Active</span>';
 
                     return $array;
@@ -808,12 +863,9 @@ add_action(
                     $api
                 ) {
                     // Get order ID
-                    $wpmeOrderId = (int) get_post_meta(
-                        $get_parent_order->id,
-
-                        WPMKTENGINE_ORDER_KEY,
-
-                        true
+                    $wpmeOrderId = (int) wpme_get_order_meta(
+                        $get_parent_order->get_id(),
+                        WPMKTENGINE_ORDER_KEY
                     );
 
                     if (!is_int($wpmeOrderId) && $wpmeOrderId < 1) {
@@ -949,20 +1001,12 @@ add_action(
                     endif;
                     $rand = rand();
                     foreach ($subscriptions_ids as $subscriptions_id):
-                        $id = get_post_meta(
-                            $order_id,
-                            WPMKTENGINE_ORDER_KEY,
-                            true
-                        );
-                        $getrenewal = get_post_meta(
-                            $order_id,
-                            "_subscription_renewal",
-                            true
-                        );
+                        $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
+                        $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
                         try {
                             $cartOrder = new \WPME\Ecommerce\CartOrder($id);
 
-                            $order = new \WC_Order($order_id);
+                            $order = wc_get_order($order_id);
 
                             $cartOrder->order_number = $order_id;
 
@@ -1057,7 +1101,7 @@ add_action(
                                     apivalidate(
                                         $order_id,
                                         $cartOrder->changed->order_status,
-                                        $subscriptions_id->id,
+                                        $subscriptions_id->get_id(),
                                         $order->date_created,
                                         (array) $cartOrder->object,
                                         (array) $cartOrder->getPayload(),
@@ -1084,7 +1128,7 @@ add_action(
                                     apivalidate(
                                         $order_id,
                                         $cartOrder->changed->order_status,
-                                        $subscriptions_id->id,
+                                        $subscriptions_id->get_id(),
                                         $order->date_created,
                                         (array) $cartOrder->object,
                                         (array) $cartOrder->getPayload(),
@@ -1098,7 +1142,7 @@ add_action(
                             apivalidate(
                                 $order_id,
                                 $cartOrder->changed->order_status,
-                                $subscriptions_id->id,
+                                $subscriptions_id->get_id(),
                                 $order->date_created,
                                 (array) $cartOrder->object,
                                 (array) $cartOrder->getPayload(),
@@ -1489,11 +1533,11 @@ add_action(
                     );
                 endif;
 
-                $getrenewal = get_post_meta($order_id, "_subscription_renewal", true);
+                $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
                 if(!empty($subscriptions_ids)):
                     foreach($subscriptions_ids as $subscriptions_id) :
-                        $subscription_id = $subscriptions_id->id;
-                        $get_order = wc_get_order($subscriptions_id->id);
+                        $subscription_id = $subscriptions_id->get_id();
+                        $get_order = wc_get_order($subscriptions_id->get_id());
                         foreach ($get_order->get_items() as $item) {
                             
                             $changedItemData = $item->get_data();
@@ -1547,11 +1591,7 @@ add_action(
                     }      
                 endif;                            
                             
-                $id = get_post_meta(
-                    $order_id,
-                    WPMKTENGINE_ORDER_KEY,
-                    true
-                );
+                $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
                 $order_genoo_id = $id;
 
                 $cartOrder = new \WPME\Ecommerce\CartOrder(
@@ -1559,7 +1599,7 @@ add_action(
                 );
                 $cartOrder->setApi($WPME_API);
 
-                $order = new \WC_Order($order_id);
+                $order = wc_get_order($order_id);
                 $cartOrder = new \WPME\Ecommerce\CartOrder();
                 $cartOrder->setApi($WPME_API);
                 $cartOrder->total_price = $order->get_total();
@@ -1628,47 +1668,108 @@ add_action(
                     "WPC-3 Woocommerce order: " . $id
                 );
                    
-                if (!empty($subscriptions_ids) && !$getrenewal)  {// When checkout at FunnelKit - Digital Magazin Subscription
-                    $cartOrder->order_status = "subpayment";
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->changed->order_status = "subpayment";
-                    $cartOrder->action = "subscription Started";
-                    $cartOrder->changed->action = "subscription Started";
+                // ALL paid orders get "new order" action - subscription activity created separately
+                $cartOrder->financial_status = "paid";
+                $cartOrder->action = "new order";
+                $cartOrder->changed->action = "new order";
+                $cartOrder->order_status = "order";
+                $cartOrder->changed->order_status = "order";
+
+                // Track subscription type for activity creation after order is created
+                $subscription_activity_type = null;
+
+                if (!empty($subscriptions_ids) && !$getrenewal) {
+                    // NEW SUBSCRIPTION
                     $cartOrder->subscription_id = $subscription_id;
-                }                          
-                elseif (!empty($subscriptions_ids) && $getrenewal!=''){
-                    $cartOrder->order_status = "subrenewal";
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->changed->order_status = "subrenewal";
-                    $cartOrder->action = "subscription Renewal";
-                    $cartOrder->changed->action = "subscription Renewal";
+                    $subscription_activity_type = "subscription started";
+                    wpme_simple_log_2("WPC-4 New subscription order. Subscription ID: " . $subscription_id);
+                } elseif (!empty($subscriptions_ids) && $getrenewal != '') {
+                    // SUBSCRIPTION RENEWAL
                     $cartOrder->subscription_id = $subscription_id;
-                } else {// When checkout at FunnelKit - Niche For Profits
-                    $cartOrder->financial_status = "paid";
-                    $cartOrder->action = "new order";
-                    $cartOrder->changed->action = "new order";
-                    $cartOrder->order_status = "order";
-                    $cartOrder->changed->order_status = "order";
-                    if ($subscription_id) {
-                        $cartOrder->subscription_id = $subscription_id;
-                    }
+                    $subscription_activity_type = "subscription renewal";
+                    wpme_simple_log_2("WPC-4 Subscription renewal order. Subscription ID: " . $subscription_id);
+                } elseif ($subscription_id) {
+                    $cartOrder->subscription_id = $subscription_id;
                 }
 
                 try {
                     $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
                     error_log('cartOrder Payload: ' . json_encode($cartOrder->getPayload()));
-                    if($result->result === 'success') {
-                        update_post_meta($order_id, 'wpme_order_id', $result->order_id);
-                        if (isset($subscription_id)) {
-                            $order_payload = $cartOrder->getPayload();
-                            $result = $WPME_API->callCustom('/wpmeorders[S]', 'PUT', (array)$order_payload);
-                            update_post_meta($subscription_id, 'wpme_order_id', $result->order_id);
-                            //error_log('$result:' . $result);
+                    
+                    if ($result->result === 'success') {
+                        // Save Genoo order ID to WooCommerce order
+                        wpme_update_order_meta($order_id, 'wpme_order_id', $result->order_id);
+                        wpme_simple_log_2("WPC-5 Order created in Genoo. Genoo ID: " . $result->order_id);
+                        
+                        // Save Genoo order ID to subscription if applicable
+                        if (isset($subscription_id) && !empty($subscription_id)) {
+                            wpme_update_order_meta($subscription_id, 'wpme_order_id', $result->order_id);
                         }
-                    }
-                    else if ($result->result === 'failed') {
+                        
+                        // Create subscription activity AFTER order is created
+                        if ($subscription_activity_type !== null && !empty($subscription_id)) {
+                            $datetime = new \DateTime();
+                            $activityDate = $datetime->format('c');
+                            
+                            $subscription_activity = array(
+                                'email' => $cartOrderEmail,
+                                'activity_date' => $activityDate,
+                                'activity_name' => '#' . $subscription_id . '; $' . $order->get_total(),
+                                'activity_description' => '',
+                                'activity_stream_type' => $subscription_activity_type,
+                                'url' => get_permalink($subscription_id)
+                            );
+                            
+                            try {
+                                $activity_result = $WPME_API->postActivities([$subscription_activity]);
+                                
+                                if (isset($activity_result->process_results[0]) && 
+                                    $activity_result->process_results[0]->result === "success") {
+                                    wpme_simple_log_2(
+                                        "WPC-6 Created " . $subscription_activity_type . 
+                                        " activity for subscription: " . $subscription_id
+                                    );
+                                } else {
+                                    // Activity creation failed - queue for retry
+                                    $error_msg = isset($activity_result->process_results[0]->error_message) 
+                                        ? $activity_result->process_results[0]->error_message 
+                                        : "Unknown error";
+                                    wpme_simple_log_2(
+                                        "WPC-6 Failed to create subscription activity: " . $error_msg
+                                    );
+                                    apivalidate(
+                                        $order_id,
+                                        $subscription_activity_type,
+                                        $subscription_id,
+                                        $order->date_created,
+                                        $subscription_activity,
+                                        $subscription_activity,
+                                        "0",
+                                        $error_msg,
+                                        $rand
+                                    );
+                                }
+                            } catch (\Exception $activityException) {
+                                wpme_simple_log_2(
+                                    "WPC-6 Exception creating subscription activity: " . 
+                                    $activityException->getMessage()
+                                );
+                                apivalidate(
+                                    $order_id,
+                                    $subscription_activity_type,
+                                    $subscription_id,
+                                    $order->date_created,
+                                    $subscription_activity,
+                                    $subscription_activity,
+                                    "0",
+                                    $activityException->getMessage(),
+                                    $rand
+                                );
+                            }
+                        }
+                    } elseif ($result->result === 'failed') {
                         apivalidate(
-                            $order->id,
+                            $order->get_id(),
                             $cartOrder->action,
                             $subscription_id,
                             $order->date_created,
@@ -1677,21 +1778,21 @@ add_action(
                             "0",
                             $result->message,
                             $rand
-                        );      
+                        );
                     }
 
                 } catch (\Exception $e) {
                     apivalidate(
-                        $order->id,
+                        $order->get_id(),
                         $cartOrder->action,
                         $subscription_id,
                         $order->date_created,
                         (array) $cartOrder->object,
                         (array) $cartOrder->getPayload(),
                         "0",
-                        "Exception happened.",
+                        "Exception happened: " . $e->getMessage(),
                         $rand
-                    );   
+                    );
                 }
             });
 
@@ -1766,7 +1867,7 @@ add_action(
                     $customer_email = $subscription->get_billing_email();
                     $datetime = new DateTime();
                     $renewalDate = $datetime->format('c');// 'c' stands for ISO 8601 format
-                    $order_id = $last_order->id;
+                    $order_id = $last_order->get_id();
 
                     $activity = array(
                         'email' => $customer_email, 
@@ -1806,8 +1907,8 @@ add_action(
                     global $WPME_API;
                     // Genoo order ID
                     $rand = rand();
-                    $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
-                    $order = new \WC_Order($order_id);
+                    $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
+                    $order = wc_get_order($order_id);
                     $cartOrder = new \WPME\Ecommerce\CartOrder($id);
                     $cartOrder->setApi($WPME_API);
                     // Total price
@@ -1852,9 +1953,9 @@ add_action(
                                 );
                             } catch (\Exception $e) {
                                 apivalidate(
-                                    $order->id,
+                                    $order->get_id(),
                                     "pending payment",
-                                    $subscriptions_id->id,
+                                    $subscriptions_id->get_id(),
                                     $order->date_created,
                                     (array) $cartOrder->object,
                                     (array) $cartOrder->getPayload(),
@@ -1870,9 +1971,9 @@ add_action(
                             $lead = $WPME_API->getLeadByEmail($email);
                             if (empty($lead)) {
                                 apivalidate(
-                                    $order->id,
+                                    $order->get_id(),
                                     "pending payment",
-                                    $subscriptions_id->id,
+                                    $subscriptions_id->get_id(),
                                     $order->date_created,
                                     (array) $cartOrder->object,
                                     (array) $cartOrder->getPayload(),
@@ -1925,9 +2026,9 @@ add_action(
                     global $WPME_API;
 
                     // Genoo order ID
-                    $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+                    $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 
-                    $order = new \WC_Order($order_id);
+                    $order = wc_get_order($order_id);
 
                     $rand = rand();
 
@@ -2002,7 +2103,7 @@ add_action(
                             );
                         } catch (\Exception $e) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "order refund full",
                                 "0",
                                 $order->date_created,
@@ -2021,7 +2122,7 @@ add_action(
                         $lead = $WPME_API->getLeadByEmail($email);
                         if (empty($lead)) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "order refund full",
                                 "0",
                                 $order->date_created,
@@ -2178,9 +2279,9 @@ add_action(
                     $rand = rand();
 
                     // Genoo order ID
-                    $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+                    $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 
-                    $order = new \WC_Order($order_id);
+                    $order = wc_get_order($order_id);
 
                     $cartOrder = new \WPME\Ecommerce\CartOrder($id);
 
@@ -2241,7 +2342,7 @@ add_action(
                             );
                         } catch (\Exception $e) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "order refund partial",
                                 "0",
                                 $order->date_created,
@@ -2260,7 +2361,7 @@ add_action(
 
                         if (empty($lead)) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "order refund partial",
                                 "0",
                                 $order->date_created,
@@ -2280,7 +2381,7 @@ add_action(
 
                         if (empty($lead)) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "order refund partial",
                                 "0",
                                 $order->date_created,
@@ -2312,9 +2413,9 @@ add_action(
                     $rand = rand();
 
                     // Genoo order ID
-                    $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+                    $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 
-                    $order = new \WC_Order($order_id);
+                    $order = wc_get_order($order_id);
 
                     $cartOrder = new \WPME\Ecommerce\CartOrder($id);
 
@@ -2384,7 +2485,7 @@ add_action(
 
                             if (empty($lead)) {
                                 apivalidate(
-                                    $order->id,
+                                    $order->get_id(),
                                     "cancelled order",
                                     "0",
                                     $order->date_created,
@@ -2398,7 +2499,7 @@ add_action(
                         }
                     } catch (\Exception $e) {
                         apivalidate(
-                            $order->id,
+                            $order->get_id(),
                             "cancelled order",
                             "0",
                             $order->date_created,
@@ -3054,10 +3155,10 @@ function wpme_fire_activity_stream(
      * Order Status Change - Regular Order
      */
 
-/*    $getrenewal = get_post_meta($order->id, "_subscription_renewal", true);
+/*    $getrenewal = get_post_meta($order->get_id(), "_subscription_renewal", true);
 
     if (function_exists("wcs_get_subscriptions_for_order")):
-        $subscriptions_ids = wcs_get_subscriptions_for_order($order->id, [
+        $subscriptions_ids = wcs_get_subscriptions_for_order($order->get_id(), [
             "order_type" => "any",
         ]);
     endif;
@@ -3134,7 +3235,7 @@ function wpme_fire_activity_stream(
 
 function get_wpme_order_from_woo_order($order)
 {
-    wpme_simple_log_2("WSC-05 - Get order " . var_export($order->id, true));
+    wpme_simple_log_2("WSC-05 - Get order " . var_export($order->get_id(), true));
 
     // https://docs.woocommerce.com/document/subscriptions/develop/functions/
     $ids = [];
@@ -3155,7 +3256,7 @@ function get_wpme_order_from_woo_order($order)
 
     wpme_simple_log_2("WSC-05-C - RETURN, id" . $order_id);
 
-    $genoo_id = get_post_meta($order->id, WPMKTENGINE_ORDER_KEY, true);
+    $genoo_id = wpme_get_order_meta($order->get_id(), WPMKTENGINE_ORDER_KEY);
 
     wpme_simple_log_2("WSC-05-D - RETURN, genoo id " . $genoo_id);
 
@@ -3216,11 +3317,11 @@ function get_wpme_subscription_activity_name($subscription_id)
         global $WPME_API;
         // Genoo order ID
 
-        $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+        $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 
         $rand = rand();
 
-        $getrenewal = get_post_meta($order_id, "_subscription_renewal", true);
+        $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
 
         if (!$getrenewal):
             if (function_exists("wcs_get_subscriptions_for_order")):
@@ -3232,18 +3333,18 @@ function get_wpme_subscription_activity_name($subscription_id)
                 );
             endif;
 
-            $order = new \WC_Order($order_id);
+            $order = wc_get_order($order_id);
 
             foreach ($subscriptions_ids as $subscriptions_id) {
-                $subids[] = $subscriptions_id->id;
+                $subids[] = $subscriptions_id->get_id();
             }
 
-            $order = new \WC_Order($order_id);
+            $order = wc_get_order($order_id);
 
             $cartOrder = new \WPME\Ecommerce\CartOrder($id);
             $cartOrder->setApi($WPME_API);
 
-            $get_order = wc_get_order($order->id);
+            $get_order = wc_get_order($order->get_id());
 
             foreach ($get_order->get_items() as $item) {
                 $changedItemData = $item->get_data();
@@ -3272,7 +3373,7 @@ function get_wpme_subscription_activity_name($subscription_id)
             $cartOrder->tax_amount = $order->get_total_tax();
             $cartOrder->total_price = $order->get_total();
             $cartOrder->shipping_amount = $order->get_total_shipping();
-            $cartOrder->order_number = $order->id;
+            $cartOrder->order_number = $order->get_id();
             // Completed?
             if (!empty($subscriptions_ids)):
                 $cartOrder->order_status = "subpayment";
@@ -3330,7 +3431,7 @@ function get_wpme_subscription_activity_name($subscription_id)
                         $cartOrder->changed->order_status = "cart";
                         $cartOrder->financial_status = "";
                         apivalidate(
-                            $order->id,
+                            $order->get_id(),
                             "subscription started",
                             $subidvalue,
                             $order->date_created,
@@ -3351,7 +3452,7 @@ function get_wpme_subscription_activity_name($subscription_id)
                         $cartOrder->changed->order_status = "cart";
                         $cartOrder->financial_status = "";
                         apivalidate(
-                            $order->id,
+                            $order->get_id(),
                             "new order",
                             $subidvalue,
                             $order->date_created,
@@ -3381,7 +3482,7 @@ function enable_processing_to_on_hold_notification($order_id, $order)
 
     global $WPME_API;
     
-     $genoo_id = get_post_meta($order_id,'wpme_order_id',true);
+     $genoo_id = wpme_get_order_meta($order_id, 'wpme_order_id');
 
       $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
 
@@ -3417,7 +3518,7 @@ function enable_processing_to_on_hold_notification($order_id, $order)
 
     if (empty($lead)) {
         apivalidate(
-            $order->id,
+            $order->get_id(),
             "order on hold",
             "0",
             $order->date_created,
@@ -3436,7 +3537,7 @@ function cartdatagenerate($order_id,$orderpasstatus)
 {
      $get_order = wc_get_order($order_id);
  
- $genoo_id = get_post_meta($order_id,'wpme_order_id',true);
+ $genoo_id = wpme_get_order_meta($order_id, 'wpme_order_id');
  
  foreach ($get_order->get_items() as $item) {
     
@@ -3463,11 +3564,7 @@ function cartdatagenerate($order_id,$orderpasstatus)
     }
 }      
 
-$id = get_post_meta(
-    $order_id,
-    WPMKTENGINE_ORDER_KEY,
-    true
-);
+$id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 $order_genoo_id = $id;
 
 $cartOrder = new \WPME\Ecommerce\CartOrder(
@@ -3475,7 +3572,7 @@ $cartOrder = new \WPME\Ecommerce\CartOrder(
 );
 $cartOrder->setApi($WPME_API);
 
-$order = new \WC_Order($order_id);
+$order = wc_get_order($order_id);
 $cartOrder = new \WPME\Ecommerce\CartOrder();
 $cartOrder->setApi($WPME_API);
 $cartOrder->total_price = $order->get_total();
@@ -3580,7 +3677,7 @@ add_action(
             ]);
         endif;
 
-        $id = get_post_meta($order_id, WPMKTENGINE_ORDER_KEY, true);
+        $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
 
         $rand = rand();
 
@@ -3588,7 +3685,7 @@ add_action(
             "Woocommerce order completed. Genoo order id: " . $id
         );
 
-        $order = new \WC_Order($order_id);
+        $order = wc_get_order($order_id);
 
         $cartAddress = $order->get_address("billing");
 
@@ -3644,7 +3741,7 @@ add_action(
                 endif;
             } catch (\Exception $e) {
                 apivalidate(
-                    $order->id,
+                    $order->get_id(),
                     "completed",
                     "0",
                     $order->date_created,
@@ -3663,7 +3760,7 @@ add_action(
             // and firstly, creat a lead.
             // 1. Create a lead get if exists
             // Do we have an email?
-            @$order = new \WC_Order($order_id);
+            @$order = wc_get_order($order_id);
 
             $email = $order->get_billing_email();
 
@@ -3679,7 +3776,7 @@ add_action(
                 // Get order & adresses
                 $session = WC()->session;
 
-                @$order = new \WC_Order($order_id);
+                @$order = wc_get_order($order_id);
 
                 $cartAddress = $order->get_address("billing");
 
@@ -3854,7 +3951,7 @@ add_action(
 
                         if (empty($lead)) {
                             apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 "completed",
                                 "0",
                                 $order->date_created,
@@ -3868,7 +3965,7 @@ add_action(
                     }
                 } catch (\Exception $e) {
                     apivalidate(
-                        $order->id,
+                        $order->get_id(),
                         "completed",
                         "0",
                         $order->date_created,
@@ -3981,13 +4078,7 @@ add_action(
                     $cartOrder->startNewOrder();
 
                     // Set order meta
-                    \update_post_meta(
-                        $order_id,
-
-                        WPMKTENGINE_ORDER_KEY,
-
-                        $cartOrder->id
-                    );
+                    wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $cartOrder->id);
 
                     // Remove session id
                     unset(WC()->session->{WPMKTENGINE_ORDER_KEY});
@@ -4008,7 +4099,7 @@ add_action(
 
                     if (empty($lead)) {
                         apivalidate(
-                            $order->id,
+                            $order->get_id(),
                             "completed",
                             "0",
                             $order->date_created,
@@ -4026,7 +4117,7 @@ add_action(
 
                 if (empty($lead)) {
                     apivalidate(
-                        $order->id,
+                        $order->get_id(),
                         "completed",
                         "0",
                         $order->date_created,
@@ -4063,7 +4154,7 @@ function on_reactive($subscription)
         $rand = rand();
         $genoo_id = get_wpme_order_from_woo_order($subscription);
 
-        $order = new \WC_Order($subscription->id);
+        $order = wc_get_order($subscription->get_id());
 
         $cartAddress = $order->get_address("billing");
 
@@ -4148,7 +4239,7 @@ add_action(
 function pending_cancel($subscription)
 {
     global $WPME_API;
-    $order = new \WC_Order($subscription->id);
+    $order = wc_get_order($subscription->get_id());
 
     $rand = rand();
 
@@ -4249,13 +4340,13 @@ function on_hold_subscription($subscription)
 
     $genoo_id = get_wpme_order_from_woo_order($subscription);
 
-    $order = new \WC_Order($subscription->id);
+    $order = wc_get_order($subscription->get_id());
 
     $cartAddress = $order->get_address("billing");
 
     $email = $cartAddress["email"];
 
-    // $order = new \WC_Order($subscription->id);
+    // $order = wc_get_order($subscription->get_id());
 
     $genoo_lead_id = get_wpme_order_lead_id($genoo_id);
 
@@ -4283,7 +4374,7 @@ function on_hold_subscription($subscription)
             apivalidate(
                 $order->parent_id,
                 "subscription on hold",
-                $subscription->id,
+                $subscription->get_id(),
                 $subscription->date_created,
                 (array)$returned_data,
                 "",
@@ -4326,7 +4417,7 @@ function customer_on_hold_subscription($subscription)
 
     $genoo_id = get_wpme_order_from_woo_order($subscription);
 
-    $order = new \WC_Order($subscription->id);
+    $order = wc_get_order($subscription->get_id());
 
     $rand = rand();
 
@@ -4343,7 +4434,7 @@ function customer_on_hold_subscription($subscription)
         apivalidate(
             $order->parent_id,
             "subscription on hold",
-            $subscription->id,
+            $subscription->get_id(),
             $subscription->date_created,
             (array)$returned_data,
             "",
@@ -4405,10 +4496,10 @@ add_action(
 
         wpme_simple_log_2(
             "WSC-01 - Subscription Cancelled: " .
-                var_export($subscription->id, true)
+                var_export($subscription->get_id(), true)
         );
 
-        $order = new \WC_Order($subscription->id);
+        $order = wc_get_order($subscription->get_id());
 
         $rand = rand();
 
@@ -4429,7 +4520,7 @@ add_action(
             apivalidate(
                 $order->parent_id,
                 "cancelled order",
-                $subscription->id,
+                $subscription->get_id(),
                 $subscription->date_created,
                 (array)$returned_data,
                 "",
@@ -4439,7 +4530,7 @@ add_action(
             );
         }
 
-        $order = new \WC_Order($subscription->id);
+        $order = wc_get_order($subscription->get_id());
 
         if (!$genoo_id) {
             return;
@@ -4503,7 +4594,7 @@ function pending_cancel_subscription($subscription)
 {
     global $WPME_API;
 
-    $order = new \WC_Order($subscription->id);
+    $order = wc_get_order($subscription->get_id());
 
     $rand = rand();
 
@@ -4525,7 +4616,7 @@ function pending_cancel_subscription($subscription)
         apivalidate(
             $order->parent_id,
             "Subscription Pending Cancellation",
-            $subscription->id,
+            $subscription->get_id(),
             $subscription->date_created,
             (array)$returned_data,
             "",
@@ -4595,7 +4686,7 @@ function my_on_subscription_expired($subscription)
 {
     global $WPME_API;
 
-    $order = new \WC_Order($subscription->id);
+    $order = wc_get_order($subscription->get_id());
 
     $cartAddress = $order->get_address("billing");
 
@@ -4614,7 +4705,7 @@ function my_on_subscription_expired($subscription)
         apivalidate(
             $order->parent_id,
             "subscription expired",
-            $subscription->id,
+            $subscription->get_id(),
             $subscription->date_created,
             $subscription,
             "",
@@ -4913,7 +5004,7 @@ function sample_admin_notice_woocommerce_success()
 
          <span>
 
-                <p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p>
+                <p><b>Genoo WPMktgEngine WooCommerce Extension update required</b></p>
 
                 <p>WooCommerce extension has been updated. Update the woocommerce extension activity stream types.</p>
 
@@ -4981,7 +5072,7 @@ function push_data_into_genoo()
 
     $result = $WPME_API->callCustom('/wpmeorders', 'POST',$get_data_value);
      $i++;
-    update_post_meta($order_value[$i], 'wpme_order_id', $result->order_id);
+    wpme_update_order_meta($order_value[$i], 'wpme_order_id', $result->order_id);
     }
     }
 }
@@ -4996,7 +5087,7 @@ if (!function_exists("mv_add_meta_boxes")) {
             ? get_post_meta($post->ID, "_my_field_slug", true)
             : "";
 
-        $wpme_order_id_value = get_post_meta($post->ID, "wpme_order_id", true);
+        $wpme_order_id_value = wpme_get_order_meta($post->ID, "wpme_order_id");
 
         $genoo_queue_value = $wpdb->prefix . "genooqueue";
 
@@ -5059,7 +5150,7 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
         global $WPME_API;
 
         $post_id = $_REQUEST["post_id"];
-        $order = new WC_Order($post_id);
+        $order = wc_get_order($post_id);
         
            $parent_id = $order->get_parent_id();
 
@@ -5093,12 +5184,12 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
                         ]
                     );
                 endif;
-                $getrenewal = get_post_meta($order_id, "_subscription_renewal", true);
+                $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
                 if(!empty($subscriptions_ids)):
                 foreach($subscriptions_ids as $subscriptions_id) :
                     
                     
-                    $get_order = wc_get_order($subscriptions_id->id);
+                    $get_order = wc_get_order($subscriptions_id->get_id());
                             foreach ($get_order->get_items() as $item) {
                                 
                                 $changedItemData = $item->get_data();
@@ -5153,11 +5244,7 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
                         endif;
                             
                             
-                            $id = get_post_meta(
-                                $order_id,
-                                WPMKTENGINE_ORDER_KEY,
-                                true
-                            );
+                            $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
                             $order_genoo_id = $id;
 
                             $cartOrder = new \WPME\Ecommerce\CartOrder(
@@ -5165,7 +5252,7 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
                             );
                             $cartOrder->setApi($WPME_API);
 
-                            $order = new \WC_Order($order_id);
+                            $order = wc_get_order($order_id);
                             $cartOrder = new \WPME\Ecommerce\CartOrder();
                             $cartOrder->setApi($WPME_API);
                             $cartOrder->total_price = $order->get_total();
@@ -5282,61 +5369,22 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
        $result = $WPME_API->callCustom('/wpmeorders', 'POST',$cartOrder->getPayload());
        
           if($result->order_id=='') :
-                    
-                   
                     $value = explode(':', $result);
-                   
-                     $str = str_replace('}', "", $value[3]);
-                     
-                     $str_value = str_replace('"', "", $str);
-     
-                          \update_post_meta(
-                       
-                                               $order_id,
-                       
-                                               WPMKTENGINE_ORDER_KEY,
-                       
-                                               $str_value
-                       
-                                           );
-                             \update_post_meta(
-                       
-                                               $subscription_id,
-                       
-                                               WPMKTENGINE_ORDER_KEY,
-                       
-                                               $str_value
-                       
-                                           );                  
+                    $str = str_replace('}', "", $value[3]);
+                    $str_value = str_replace('"', "", $str);
+                    wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $str_value);
+                    wpme_update_order_meta($subscription_id, WPMKTENGINE_ORDER_KEY, $str_value);
                     $wpme_order_id_value = $str_value;
                    else:
-                       
                     $wpme_order_id_value = $result->order_id;
-       
-                        \update_post_meta(
-                       
-                                               $order_id,
-                       
-                                               WPMKTENGINE_ORDER_KEY,
-                       
-                                               $result->order_id
-                       
-                                           );   
-                          \update_post_meta(
-                       
-                                               $subscription_id,
-                       
-                                               WPMKTENGINE_ORDER_KEY,
-                       
-                                               $result->order_id
-                       
-                                           );    
+                    wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $result->order_id);
+                    wpme_update_order_meta($subscription_id, WPMKTENGINE_ORDER_KEY, $result->order_id);
                     endif;
                     
                     
 } catch (\Exception $e) {
       apivalidate(
-                                $order->id,
+                                $order->get_id(),
                                 $cartOrder->action,
                                 "0",
                                 $order->date_created,
