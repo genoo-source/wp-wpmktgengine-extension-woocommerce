@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WooCommerce - WPMktgEngine | Genoo Extension
+Plugin Name: Genoo WPMktgEngine WooCommerce Extension
 Description: Genoo, LLC
 Author:  Genoo, LLC
 Author URI: http://www.genoo.com/
@@ -600,7 +600,7 @@ add_action(
                 "wpmktengine_tools_extensions_widget",
 
                 function ($array) {
-                    $array["WooCommerce - WPMktgEngine | Genoo Extension"] =
+                    $array["Genoo WPMktgEngine WooCommerce Extension"] =
                         '<span style="color:green">Active</span>';
 
                     return $array;
@@ -5004,7 +5004,7 @@ function sample_admin_notice_woocommerce_success()
 
          <span>
 
-                <p><b>WooCommerce - WPMktgEngine | Genoo Extension update required</b></p>
+                <p><b>Genoo WPMktgEngine WooCommerce Extension update required</b></p>
 
                 <p>WooCommerce extension has been updated. Update the woocommerce extension activity stream types.</p>
 

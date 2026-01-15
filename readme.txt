@@ -1,4 +1,4 @@
-=== WooCommerce - WPMktgEngine | Genoo Extension ===
+=== Genoo WPMktgEngine WooCommerce Extension ===
 Contributors: Genoo, latorante
 Tags: marketing automation, email marketing, lead capture forms
 Requires at least: 5.3.1
@@ -10,7 +10,7 @@ Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
 
-Understand how your leads and customers are participating with your ecommerce system using the WooCommerce - WPMktgEngine extension. It extends the ActivityStream for your lead & customer database within your WPMktgEngine account, so you can see which leads are buying, and ties the order to the lead record. Having a full view of lead & customer activity allows you to incorporate that knowledge into smart rules and actions that ensure people are getting relevant messages, and you are building deeper relationships and trust with your leads and customers.
+Understand how your leads and customers are participating with your ecommerce system using the Genoo WPMktgEngine WooCommerce Extension. It extends the ActivityStream for your lead & customer database within your WPMktgEngine account, so you can see which leads are buying, and ties the order to the lead record. Having a full view of lead & customer activity allows you to incorporate that knowledge into smart rules and actions that ensure people are getting relevant messages, and you are building deeper relationships and trust with your leads and customers.
 
 = Requirements =
 
@@ -22,13 +22,13 @@ Understand how your leads and customers are participating with your ecommerce sy
 
 = Automatic =
 1. Go to your admin area and select Plugins -> Add new from the menu.
-2. Search for “WooCommerce - WPMktgEngine Extension”.
+2. Search for "Genoo WPMktgEngine WooCommerce Extension".
 3. Click install.
 4. Click activate.
 5. Enjoy.
 
 = Manual =
-1. Go to [http://wordpress.org/plugins/wpmktgengine-extension-woocommerce/](http://wordpress.org/plugins/wpmktgengine-extension-woocommerce/ “WooCommerce - WPMktgEngine Extension”)
+1. Go to [http://wordpress.org/plugins/wpmktgengine-extension-woocommerce/](http://wordpress.org/plugins/wpmktgengine-extension-woocommerce/ "Genoo WPMktgEngine WooCommerce Extension")
 2. Download latest version of the plugin.
 3. Unzip file into WordPress plugins directory.
 4. Activate plugin.
