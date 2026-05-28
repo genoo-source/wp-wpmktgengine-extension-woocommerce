@@ -5,7 +5,7 @@ Description: Genoo, LLC
 Author:  Genoo, LLC
 Author URI: http://www.genoo.com/
 Author Email: info@genoo.com
-Version: 1.7.51
+Version: 1.7.52
 License: GPLv2
 WC requires at least: 3.0.0
 WC tested up to: 9.4.0
@@ -4327,10 +4327,6 @@ add_action(
 function on_hold_subscription($subscription)
 {
     global $WPME_API;
-
-    $repo = new \WPME\RepositorySettingsFactory();
-
-    $api = new \WPME\ApiFactory($repo);
 
     $user = wp_get_current_user();
 

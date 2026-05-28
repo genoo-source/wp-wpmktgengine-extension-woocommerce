@@ -5,7 +5,7 @@ Requires at least: 5.3.1
 Tested up to: 6.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 111.7.51
+Stable tag: 1.7.52
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.52 ==
+Fixed fatal error "Class WPME\RepositorySettingsFactory not found" in on_hold_subscription() that caused scheduled subscription payment actions to fail.
 
 == 1.7.51 ==
 fixed issue that conflicted with Media Library display.
