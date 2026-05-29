@@ -5,7 +5,7 @@ Description: Genoo, LLC
 Author:  Genoo, LLC
 Author URI: http://www.genoo.com/
 Author Email: info@genoo.com
-Version: 1.7.52
+Version: 1.7.53
 License: GPLv2
 WC requires at least: 3.0.0
 WC tested up to: 9.4.0
@@ -511,11 +511,11 @@ add_action(
                         "data_tables",
                         plugins_url(
                             "/includes/activitystream.js",
-                            __FILE__,
-                            [],
-                            "1.0.0",
-                            true
-                        )
+                            __FILE__
+                        ),
+                        ["jquery"],
+                        "1.0.0",
+                        true
                     );
                     if ( isset($_GET["page"]) && (
                         $_GET["page"] == "WPMKTENGINE" ||
@@ -536,22 +536,22 @@ add_action(
                             "js_cdn",
                             plugins_url(
                                 "/includes/tab.js",
-                                __FILE__,
-                                [],
-                                "1.0.0",
-                                true
-                            )
+                                __FILE__
+                            ),
+                            ["jquery"],
+                            "1.0.0",
+                            true
                         );
 
                         wp_enqueue_script(
                             "order_queue_script",
                             plugins_url(
                                 "/includes/orderqueuescript.js",
-                                __FILE__,
-                                [],
-                                "1.0.0",
-                                true
-                            )
+                                __FILE__
+                            ),
+                            ["jquery"],
+                            "1.0.0",
+                            true
                         );
                         wp_localize_script(
                             "data_tables",
@@ -4762,43 +4762,39 @@ add_action("wp_ajax_order_status_update", "order_status_update");
 
 function woocommerce_activity_stream_types()
 {
+    global $wpdb;
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    $charset_collate = $wpdb->get_charset_collate();
+
     if (
         class_exists("\WPME\ApiFactory") &&
         class_exists("\WPME\RepositorySettingsFactory")
     ) {
-        $activate = true;
-
         $repo = new \WPME\RepositorySettingsFactory();
 
         $api = new \WPME\ApiFactory($repo);
-
-        if (class_exists("\Genoo\Api")) {
-            $isGenoo = true;
-        }
     } elseif (
         class_exists("\Genoo\Api") &&
         class_exists("\Genoo\RepositorySettings")
     ) {
-        $activate = true;
-
         $repo = new \Genoo\RepositorySettings();
 
         $api = new \Genoo\Api($repo);
-
-        $isGenoo = true;
     } elseif (
         class_exists("\WPMKTENGINE\Api") &&
         class_exists("\WPMKTENGINE\RepositorySettings")
     ) {
-        $activate = true;
-
         $repo = new \WPMKTENGINE\RepositorySettings();
 
         $api = new \WPMKTENGINE\Api($repo);
     }
 
+    if (empty($api)) {
+        wp_send_json_error(['message' => 'Parent plugin API not available.']);
+        wp_die();
+    }
+
     try {
-        global $wpdb;
         $api->setStreamTypes([
             ["name" => "viewed product", "description" => ""],
 
@@ -4880,17 +4876,10 @@ function woocommerce_activity_stream_types()
         ADD COLUMN active_type int(11),order_payload Text null, payload Text null";
 
         $wpdb->query($api_queue);
-
-        $option = get_option("WPME_ECOMMERCE", []);
-
-        // Save option
-        $option["genooLeadUsercustomer"] = $activeLeadType;
-        $option["cronsetup"] = "5";
-
-        update_option("WPME_ECOMMERCE", $option);
     } catch (\Exception $e) {
         // Decide later Sub Renewal Failed
     }
+    wp_die();
 }
 
 add_filter(
@@ -4958,6 +4947,7 @@ function woocommerce_update_db_check()
 function woocommerce_delete_plugin_options()
 {
     delete_option("plugin_file_updated");
+    wp_die();
 }
 
 function woocommerce_wp_upgrade_completed($upgrader_object, $options)
