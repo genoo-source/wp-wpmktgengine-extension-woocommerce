@@ -5119,28 +5119,23 @@ add_action('woocommerce_order_action_wpme_sync_to_genoo', function ($order) {
     }
 
     try {
-        if (!empty($genoo_order_id)) {
-            // Order already exists in Genoo — send a full update (PUT)
-            $cartOrder->changed->total_price     = $order->get_total();
-            $cartOrder->changed->tax_amount      = $order->get_total_tax();
-            $cartOrder->changed->shipping_amount = $order->get_total_shipping();
-            $cartOrder->changed->order_number    = $order_id;
-            $payload = $cartOrder->getPayload();
-            error_log('[WPME Sync] PUT payload: ' . json_encode($payload));
-            $WPME_API->updateCart($genoo_order_id, (array) $payload);
-            $order->add_order_note('Order synced to Genoo. Genoo Order ID: ' . $genoo_order_id);
-        } else {
-            // No Genoo order yet — create one
-            $payload = $cartOrder->getPayload();
-            error_log('[WPME Sync] POST payload: ' . json_encode($payload));
-            $result = $WPME_API->callCustom('/wpmeorders', 'POST', $payload);
-            error_log('[WPME Sync] POST result: ' . json_encode($result));
-            if (isset($result->order_id) && !empty($result->order_id)) {
-                wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $result->order_id);
-                $order->add_order_note('Order created in Genoo. Genoo Order ID: ' . $result->order_id);
-            } else {
-                $order->add_order_note('Sync to Genoo failed: unexpected API response.');
+        // Always POST a fresh order — the Genoo API's PUT endpoint does not
+        // support updating line_items on existing orders, so we create a new
+        // record with the full current data and update the WC meta to match.
+        $payload = $cartOrder->getPayload();
+        error_log('[WPME Sync] POST payload: ' . json_encode($payload));
+        $result = $WPME_API->callCustom('/wpmeorders', 'POST', $payload);
+        error_log('[WPME Sync] POST result: ' . json_encode($result));
+        if (isset($result->order_id) && !empty($result->order_id)) {
+            wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $result->order_id);
+            $note = 'Order synced to Genoo. New Genoo Order ID: ' . $result->order_id;
+            if (!empty($genoo_order_id)) {
+                $note .= ' (replaced old Genoo Order ID: ' . $genoo_order_id . ')';
             }
+            $order->add_order_note($note);
+        } else {
+            error_log('[WPME Sync] Unexpected API response: ' . json_encode($result));
+            $order->add_order_note('Sync to Genoo failed: unexpected API response.');
         }
     } catch (\Exception $e) {
         $order->add_order_note('Sync to Genoo failed: ' . $e->getMessage());
