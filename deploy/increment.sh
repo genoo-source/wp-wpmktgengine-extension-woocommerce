@@ -9,12 +9,13 @@
 # File:
 # wpmktgengine-woocommerce.php
 
-# Get needed versions from a
-PLUGIN_CURRENT_VERSION=$(awk '/   Version/{print $NF}' wpmktgengine-woocommerce.php)
+# Get needed versions
+# Anchored to the ^Version: line so the match is exact and unambiguous
+PLUGIN_CURRENT_VERSION=$(grep -m 1 '^Version:' wpmktgengine-woocommerce.php | awk '{print $2}')
 PLUGIN_NEXT_VERSION=$(echo $PLUGIN_CURRENT_VERSION | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
 # Get latest WordPress Version
 PLUGIN_WORDPRESS_NEXT_VERSION=$(curl -s "https://api.wordpress.org/core/version-check/1.7/" | jq -r '[.offers[]|select(.response=="upgrade")][0].version')
-PLUGIN_WORDPRESS_CURRENT_VERSION=$(awk '/Tested up to/{print $NF}' readme.txt)
+PLUGIN_WORDPRESS_CURRENT_VERSION=$(grep -m 1 '^Tested up to:' readme.txt | awk '{print $NF}')
 
 read -p "Would you like to update plugin from $PLUGIN_CURRENT_VERSION to $PLUGIN_NEXT_VERSION ?" response
 if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
@@ -22,14 +23,14 @@ if [[ $response = "yes" ]] || [[ $response = "y" ]] || [[ -z $response ]]; then
   # Check OS type, as macOS (Darwin) uses different version of `sed` command
   if [ "$(uname)" == "Darwin" ]; then
     # macOs
-    sed -i "" "s/${PLUGIN_CURRENT_VERSION}/${PLUGIN_NEXT_VERSION}/g" wpmktgengine-woocommerce.php
-    sed -i "" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
-    sed -i "" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
+    sed -i "" "s/^Version:.*$/Version: ${PLUGIN_NEXT_VERSION}/" wpmktgengine-woocommerce.php
+    sed -i "" "s/^Stable tag:.*$/Stable tag: ${PLUGIN_NEXT_VERSION}/" readme.txt
+    sed -i "" "s/^Tested up to:.*$/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/" readme.txt
   else
     # Any other
-    sed -i"" "s/${PLUGIN_CURRENT_VERSION}/${PLUGIN_NEXT_VERSION}/g" wpmktgengine-woocommerce.php
-    sed -i"" "s/Stable tag: ${PLUGIN_CURRENT_VERSION}/Stable tag: ${PLUGIN_NEXT_VERSION}/g" readme.txt
-    sed -i"" "s/Tested up to: ${PLUGIN_WORDPRESS_CURRENT_VERSION}/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/g" readme.txt
+    sed -i "" "s/^Version:.*$/Version: ${PLUGIN_NEXT_VERSION}/" wpmktgengine-woocommerce.php
+    sed -i "" "s/^Stable tag:.*$/Stable tag: ${PLUGIN_NEXT_VERSION}/" readme.txt
+    sed -i "" "s/^Tested up to:.*$/Tested up to: ${PLUGIN_WORDPRESS_NEXT_VERSION}/" readme.txt
   fi
 
   # New tag and push
