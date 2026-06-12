@@ -5055,17 +5055,19 @@ add_action('woocommerce_order_action_wpme_sync_to_genoo', function ($order) {
     }
 
     $order_id = $order->get_id();
+    error_log('[WPME Sync] Starting sync for WC order #' . $order_id);
 
     // Build line items always from the order (captures all products, including
     // non-subscription items in mixed carts)
     $wpmeApiOrderItems = [];
     foreach ($order->get_items() as $item) {
         $changedItemData = $item->get_data();
-        $id = (int) get_post_meta($changedItemData['product_id'], WPMKTENGINE_PRODUCT_KEY, true);
-        if (is_numeric($id) && $id > 0) {
+        $genoo_pid = (int) get_post_meta($changedItemData['product_id'], WPMKTENGINE_PRODUCT_KEY, true);
+        error_log('[WPME Sync]   Item: "' . $changedItemData['name'] . '" | WC product_id=' . $changedItemData['product_id'] . ' | wpme_product_id=' . $genoo_pid);
+        if (is_numeric($genoo_pid) && $genoo_pid > 0) {
             $qty = $changedItemData['quantity'] ?: 1;
             $wpmeApiOrderItems[] = [
-                'product_id'          => $id,
+                'product_id'          => $genoo_pid,
                 'quantity'            => $qty,
                 'total_price'         => $changedItemData['total'],
                 'unit_price'          => $changedItemData['total'] / $qty,
@@ -5074,8 +5076,10 @@ add_action('woocommerce_order_action_wpme_sync_to_genoo', function ($order) {
             ];
         }
     }
+    error_log('[WPME Sync] Items built: ' . count($wpmeApiOrderItems) . ' — ' . json_encode($wpmeApiOrderItems));
 
     $genoo_order_id  = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
+    error_log('[WPME Sync] Existing Genoo order ID: ' . ($genoo_order_id ?: 'none'));
     $cartOrder       = new \WPME\Ecommerce\CartOrder($genoo_order_id ?: null);
     $cartOrder->setApi($WPME_API);
 
@@ -5121,11 +5125,16 @@ add_action('woocommerce_order_action_wpme_sync_to_genoo', function ($order) {
             $cartOrder->changed->tax_amount      = $order->get_total_tax();
             $cartOrder->changed->shipping_amount = $order->get_total_shipping();
             $cartOrder->changed->order_number    = $order_id;
-            $WPME_API->updateCart($genoo_order_id, (array) $cartOrder->getPayload());
+            $payload = $cartOrder->getPayload();
+            error_log('[WPME Sync] PUT payload: ' . json_encode($payload));
+            $WPME_API->updateCart($genoo_order_id, (array) $payload);
             $order->add_order_note('Order synced to Genoo. Genoo Order ID: ' . $genoo_order_id);
         } else {
             // No Genoo order yet — create one
-            $result = $WPME_API->callCustom('/wpmeorders', 'POST', $cartOrder->getPayload());
+            $payload = $cartOrder->getPayload();
+            error_log('[WPME Sync] POST payload: ' . json_encode($payload));
+            $result = $WPME_API->callCustom('/wpmeorders', 'POST', $payload);
+            error_log('[WPME Sync] POST result: ' . json_encode($result));
             if (isset($result->order_id) && !empty($result->order_id)) {
                 wpme_update_order_meta($order_id, WPMKTENGINE_ORDER_KEY, $result->order_id);
                 $order->add_order_note('Order created in Genoo. Genoo Order ID: ' . $result->order_id);
