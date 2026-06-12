@@ -96,17 +96,9 @@ function send_queue_record_details()
 
         //  }
 
-          if (!in_array($get_all_queue_record->order_activitystreamtypes, $failed_order_values)) {
-          //  $result = $WPME_API->updateCart($wpme_order_id_value, $orderpayload);
-
-            if (!in_array($get_all_queue_record->order_activitystreamtypes, $order_update_options))
-              wpme_update_order_meta($order_id, 'wpme_order_id', $result->order_id);
-          }
-       
-        
         if ($get_all_queue_record->order_activitystreamtypes == 'cancelled order') {
           $cancel_order_id = wpme_get_order_meta($order_id, 'wpme_order_id');
-
+          $orderpayload = json_decode($get_all_queue_record->order_payload);
           $result = $WPME_API->updateCart($cancel_order_id, $orderpayload);
             }
      

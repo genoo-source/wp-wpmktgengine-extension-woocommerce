@@ -5,7 +5,7 @@ Description: Genoo, LLC
 Author:  Genoo, LLC
 Author URI: http://www.genoo.com/
 Author Email: info@genoo.com
-Version: 1.7.53
+Version: 1.7.54
 License: GPLv2
 WC requires at least: 3.0.0
 WC tested up to: 9.4.0
@@ -1534,62 +1534,40 @@ add_action(
                 endif;
 
                 $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
-                if(!empty($subscriptions_ids)):
-                    foreach($subscriptions_ids as $subscriptions_id) :
+                // Extract subscription ID for later use (subscription_id field, activity type).
+                // Do NOT read items from the subscription object — subscriptions only contain
+                // subscription products, so non-subscription items in a mixed cart would be lost.
+                if (!empty($subscriptions_ids)):
+                    foreach ($subscriptions_ids as $subscriptions_id):
                         $subscription_id = $subscriptions_id->get_id();
-                        $get_order = wc_get_order($subscriptions_id->get_id());
-                        foreach ($get_order->get_items() as $item) {
-                            
-                            $changedItemData = $item->get_data();
-                            // Let's see if this is in
-                            $id = (int) get_post_meta(
-                                $changedItemData["product_id"],
-                                WPMKTENGINE_PRODUCT_KEY,
-                                true
-                            );
-                            if (is_numeric($id) && $id > 0) {
-                                $array["product_id"] = $id;
-                                $array["quantity"] =
-                                    $changedItemData["quantity"];
-                                $array["total_price"] =
-                                    $changedItemData["total"];
-                                $array["unit_price"] =
-                                    $changedItemData["total"] /
-                                    $changedItemData["quantity"];
-                                $array["external_product_id"] =
-                                    $changedItemData["product_id"];
-                                $array["name"] = $changedItemData["name"];
-                                $wpmeApiOrderItems[] = $array;
-                            }
-                        }
                     endforeach;
-                else:
-                    $get_order = wc_get_order($order_id);
-                    foreach ($get_order->get_items() as $item) {
-                        
-                        $changedItemData = $item->get_data();
-                        // Let's see if this is in
-                        $id = (int) get_post_meta(
-                            $changedItemData["product_id"],
-                            WPMKTENGINE_PRODUCT_KEY,
-                            true
-                        );
-                        if (is_numeric($id) && $id > 0) {
-                            $array["product_id"] = $id;
-                            $array["quantity"] =
-                                $changedItemData["quantity"];
-                            $array["total_price"] =
-                                $changedItemData["total"];
-                            $array["unit_price"] =
-                                $changedItemData["total"] /
-                                $changedItemData["quantity"];
-                            $array["external_product_id"] =
-                                $changedItemData["product_id"];
-                            $array["name"] = $changedItemData["name"];
-                            $wpmeApiOrderItems[] = $array;
-                        }
-                    }      
-                endif;                            
+                endif;
+
+                // Always build line items from the original order so every product
+                // in the cart is captured regardless of subscription status.
+                $get_order = wc_get_order($order_id);
+                foreach ($get_order->get_items() as $item) {
+                    $changedItemData = $item->get_data();
+                    $id = (int) get_post_meta(
+                        $changedItemData["product_id"],
+                        WPMKTENGINE_PRODUCT_KEY,
+                        true
+                    );
+                    if (is_numeric($id) && $id > 0) {
+                        $array["product_id"] = $id;
+                        $array["quantity"] =
+                            $changedItemData["quantity"];
+                        $array["total_price"] =
+                            $changedItemData["total"];
+                        $array["unit_price"] =
+                            $changedItemData["total"] /
+                            $changedItemData["quantity"];
+                        $array["external_product_id"] =
+                            $changedItemData["product_id"];
+                        $array["name"] = $changedItemData["name"];
+                        $wpmeApiOrderItems[] = $array;
+                    }
+                }                            
                             
                 $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
                 $order_genoo_id = $id;
@@ -5063,22 +5041,31 @@ function push_data_into_genoo()
     }
 }
 // Adding Meta container admin shop_order pages
-add_action("add_meta_boxes", "mv_add_meta_boxes");
+add_action("add_meta_boxes", "mv_add_meta_boxes", 10, 2);
 if (!function_exists("mv_add_meta_boxes")) {
-    function mv_add_meta_boxes()
+    function mv_add_meta_boxes($post_type, $post_or_order_object)
     {
-        global $post, $wpdb;
+        global $wpdb;
 
-       $meta_field_data = get_post_meta($post->ID, "_my_field_slug", true)
-            ? get_post_meta($post->ID, "_my_field_slug", true)
-            : "";
+        // Resolve order ID from both classic (WP_Post) and HPOS (WC_Order) contexts
+        if (is_a($post_or_order_object, 'WC_Order')) {
+            $order_id = $post_or_order_object->get_id();
+        } elseif (isset($post_or_order_object->ID)) {
+            $order_id = (int) $post_or_order_object->ID;
+        } else {
+            return;
+        }
 
-        $wpme_order_id_value = wpme_get_order_meta($post->ID, "wpme_order_id");
+        if (!$order_id) {
+            return;
+        }
+
+        $wpme_order_id_value = wpme_get_order_meta($order_id, "wpme_order_id");
 
         $genoo_queue_value = $wpdb->prefix . "genooqueue";
 
         $get_results_of_genooqueue = $wpdb->get_results(
-            "select * from $genoo_queue_value where `order_id`=$post->ID"
+            $wpdb->prepare("select * from $genoo_queue_value where `order_id` = %d", $order_id)
         );
 
         if ($wpme_order_id_value == "" && empty($get_results_of_genooqueue)) {
@@ -5086,7 +5073,7 @@ if (!function_exists("mv_add_meta_boxes")) {
                 "mv_other_fields",
                 __("Push Order to Genoo", "woocommerce"),
                 "mv_add_other_fields_for_packaging",
-                ["shop_order","shop_subscription"],
+                ["shop_order", "woocommerce_page_wc-orders", "shop_subscription"],
                 "side",
                 "core"
            );
@@ -5171,63 +5158,38 @@ if (!function_exists("mv_save_wc_order_other_fields")) {
                     );
                 endif;
                 $getrenewal = wpme_get_order_meta($order_id, "_subscription_renewal");
-                if(!empty($subscriptions_ids)):
-                foreach($subscriptions_ids as $subscriptions_id) :
-                    
-                    
-                    $get_order = wc_get_order($subscriptions_id->get_id());
-                            foreach ($get_order->get_items() as $item) {
-                                
-                                $changedItemData = $item->get_data();
-                                // Let's see if this is in
-                                $id = (int) get_post_meta(
-                                    $changedItemData["product_id"],
-                                    WPMKTENGINE_PRODUCT_KEY,
-                                    true
-                                );
-                                if (is_numeric($id) && $id > 0) {
-                                    $array["product_id"] = $id;
-                                    $array["quantity"] =
-                                        $changedItemData["quantity"];
-                                    $array["total_price"] =
-                                        $changedItemData["total"];
-                                    $array["unit_price"] =
-                                        $changedItemData["total"] /
-                                        $changedItemData["quantity"];
-                                    $array["external_product_id"] =
-                                        $changedItemData["product_id"];
-                                    $array["name"] = $changedItemData["name"];
-                                    $wpmeApiOrderItems[] = $array;
-                                }
-                            }
-                            endforeach;
-                            else:
-                              $get_order = wc_get_order($order_id);
-                            foreach ($get_order->get_items() as $item) {
-                                
-                                $changedItemData = $item->get_data();
-                                // Let's see if this is in
-                                $id = (int) get_post_meta(
-                                    $changedItemData["product_id"],
-                                    WPMKTENGINE_PRODUCT_KEY,
-                                    true
-                                );
-                                if (is_numeric($id) && $id > 0) {
-                                    $array["product_id"] = $id;
-                                    $array["quantity"] =
-                                        $changedItemData["quantity"];
-                                    $array["total_price"] =
-                                        $changedItemData["total"];
-                                    $array["unit_price"] =
-                                        $changedItemData["total"] /
-                                        $changedItemData["quantity"];
-                                    $array["external_product_id"] =
-                                        $changedItemData["product_id"];
-                                    $array["name"] = $changedItemData["name"];
-                                    $wpmeApiOrderItems[] = $array;
-                                }
-                            }      
-                        endif;
+                // Extract subscription ID for later use.
+                // Always read items from the original order — not the subscription object —
+                // so non-subscription products in a mixed cart are captured.
+                if (!empty($subscriptions_ids)):
+                    foreach ($subscriptions_ids as $subscriptions_id):
+                        $subscription_id = $subscriptions_id->get_id();
+                    endforeach;
+                endif;
+
+                $get_order = wc_get_order($order_id);
+                foreach ($get_order->get_items() as $item) {
+                    $changedItemData = $item->get_data();
+                    $id = (int) get_post_meta(
+                        $changedItemData["product_id"],
+                        WPMKTENGINE_PRODUCT_KEY,
+                        true
+                    );
+                    if (is_numeric($id) && $id > 0) {
+                        $array["product_id"] = $id;
+                        $array["quantity"] =
+                            $changedItemData["quantity"];
+                        $array["total_price"] =
+                            $changedItemData["total"];
+                        $array["unit_price"] =
+                            $changedItemData["total"] /
+                            $changedItemData["quantity"];
+                        $array["external_product_id"] =
+                            $changedItemData["product_id"];
+                        $array["name"] = $changedItemData["name"];
+                        $wpmeApiOrderItems[] = $array;
+                    }
+                }
                             
                             
                             $id = wpme_get_order_meta($order_id, WPMKTENGINE_ORDER_KEY);
