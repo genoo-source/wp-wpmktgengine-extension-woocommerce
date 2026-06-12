@@ -1,0 +1,35 @@
+---
+description: CI/CD and release conventions for this plugin
+alwaysApply: true
+---
+
+# Deployment & Release Conventions
+
+## Version numbers are managed by CI/CD — never bump them manually
+
+The `Manually Deploy New Version` GitHub Actions workflow runs `deploy/increment.sh` which automatically increments the version in:
+- `wpmktgengine-woocommerce.php` (plugin header `Version:`)
+- `readme.txt` (`Stable tag:`)
+
+**Do not touch version numbers or `Stable tag` in PRs.** Only update the changelog in `readme.txt`.
+
+```php
+// ❌ NEVER do this in a PR
+Version: 1.7.55
+
+// ✅ ONLY update the changelog section
+== 1.7.55 ==
+Description of changes.
+```
+
+## Changelog entries are still required in PRs
+
+Add a new entry at the top of the `== Changelog ==` section in `readme.txt` using the *next expected* version number as a placeholder. The CI/CD process will ensure the final version matches.
+
+## PR workflow
+
+1. Branch from `master`
+2. Make changes
+3. Add changelog entry to `readme.txt` (no version bump elsewhere)
+4. Commit and push branch
+5. Raise PR — conflicts on `Stable tag` are caused by the GenooBot release commit and should always resolve to our new version number, fixing any `11.x.xx` typos GenooBot introduces
