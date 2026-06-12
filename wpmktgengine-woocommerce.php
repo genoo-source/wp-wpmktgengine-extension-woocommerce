@@ -5143,22 +5143,31 @@ add_action('woocommerce_order_action_wpme_sync_to_genoo', function ($order) {
 });
 
 // Adding Meta container admin shop_order pages
-add_action("add_meta_boxes", "mv_add_meta_boxes");
+add_action("add_meta_boxes", "mv_add_meta_boxes", 10, 2);
 if (!function_exists("mv_add_meta_boxes")) {
-    function mv_add_meta_boxes()
+    function mv_add_meta_boxes($post_type, $post_or_order_object)
     {
-        global $post, $wpdb;
+        global $wpdb;
 
-       $meta_field_data = get_post_meta($post->ID, "_my_field_slug", true)
-            ? get_post_meta($post->ID, "_my_field_slug", true)
-            : "";
+        // Resolve order ID from both classic (WP_Post) and HPOS (WC_Order) contexts
+        if (is_a($post_or_order_object, 'WC_Order')) {
+            $order_id = $post_or_order_object->get_id();
+        } elseif (isset($post_or_order_object->ID)) {
+            $order_id = (int) $post_or_order_object->ID;
+        } else {
+            return;
+        }
 
-        $wpme_order_id_value = wpme_get_order_meta($post->ID, "wpme_order_id");
+        if (!$order_id) {
+            return;
+        }
+
+        $wpme_order_id_value = wpme_get_order_meta($order_id, "wpme_order_id");
 
         $genoo_queue_value = $wpdb->prefix . "genooqueue";
 
         $get_results_of_genooqueue = $wpdb->get_results(
-            "select * from $genoo_queue_value where `order_id`=$post->ID"
+            $wpdb->prepare("select * from $genoo_queue_value where `order_id` = %d", $order_id)
         );
 
         if ($wpme_order_id_value == "" && empty($get_results_of_genooqueue)) {
@@ -5166,7 +5175,7 @@ if (!function_exists("mv_add_meta_boxes")) {
                 "mv_other_fields",
                 __("Push Order to Genoo", "woocommerce"),
                 "mv_add_other_fields_for_packaging",
-                ["shop_order","shop_subscription"],
+                ["shop_order", "woocommerce_page_wc-orders", "shop_subscription"],
                 "side",
                 "core"
            );
