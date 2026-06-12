@@ -5,7 +5,7 @@ Requires at least: 5.3.1
 Tested up to: 7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Stable tag: 11.7.53
+Stable tag: 1.7.54
 Understand how your leads and customers are participating with your ecommerce.
 
 == Description ==
@@ -41,6 +41,9 @@ Understand how your leads and customers are participating with your ecommerce sy
 == Upgrade Notice ==
 
 == Changelog ==
+
+== 1.7.54 ==
+Fixed missing line items in orders containing both subscription and non-subscription products: payment handler now always reads line items from the parent order rather than the subscription object, ensuring all products are sent to Genoo regardless of type. Fixed PHP Fatal error in cron retry queue caused by references to undefined variables. Fixed SQL error and HPOS compatibility issue in order meta box: now correctly resolves order ID in both classic and HPOS modes and uses prepared statements.
 
 == 1.7.53 ==
 Fixed "Update Database" button doing nothing: added missing require upgrade.php and charset_collate to AJAX handler, guarded against undefined API, removed activation-only option writes that silently reset cron settings, added wp_die() to both AJAX handlers, and fixed wp_enqueue_script() parameter placement for three admin scripts.
